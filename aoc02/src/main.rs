@@ -1,35 +1,30 @@
 
 fn main() {
-	part_one();
-	part_two();
+	println!("Part One: {}", part_one());
+	println!("Part Two: {}", part_two());
 }
 
-fn part_one() {
-	let count = process_inputs(|min, max, char, password| {
-		let seen = password.iter()
+fn part_one() -> usize {
+	process_inputs(|min, max, char, password| {
+		let count = password.iter()
 			.filter(|c|  **c == char)
 			.count();
 
-		(min..=max).contains(&seen)
-	});
-
-	println!("Count: {}", count);
+		min <= count && count <= max
+	})
 }
 
-fn part_two() {
-	let handler = |pos_one, pos_two, char, password: &'static [u8]| {
-		(password[(pos_one - 1)] == char) ^ (password[(pos_two - 1)] == char)
-	};
-	let count = process_inputs(handler);
-
-	println!("Count: {}", count);
+fn part_two() -> usize {
+	let handler = |pos_one, pos_two, char, password: &'static [u8]| (password[pos_one - 1] == char) ^ (password[pos_two - 1] == char);
+	process_inputs(handler)
 }
 
 fn process_inputs(mut handler: impl FnMut(usize, usize, u8, &'static [u8]) -> bool) -> usize {
-	let mut input = include_str!("../input/input.txt");
+	let input = include_str!("../input/input.txt");
 
 	let regex = regex::RegexBuilder::new(r"(\d+)\-(\d+) (\w): (\w+?)$")
 		.multi_line(true)
+		.unicode(false)
 		.build()
 		.unwrap();
 
