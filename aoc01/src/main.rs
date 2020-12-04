@@ -47,6 +47,9 @@ fn find_triple(input: &[u32]) -> Option<(u32, u32, u32)> {
 	None
 }
 
+fn find_match() -> () {
+}
+
 fn read_numbers() -> Result<Vec<u32>, std::num::ParseIntError> {
 	include_str!("../input/input.txt")
 		.lines()
