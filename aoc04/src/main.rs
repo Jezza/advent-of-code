@@ -3,23 +3,21 @@
 use std::collections::HashMap;
 
 fn main() {
-	part_one();
-	part_two();
+	println!("Part One: {}", part_one());
+	println!("Part Two: {}", part_two());
 }
 
-fn part_one() {
-	let count = check_details(|opts| opts.contains_key("byr")
+fn part_one() -> usize {
+	check_details(|opts| opts.contains_key("byr")
 		&& opts.contains_key("iyr")
 		&& opts.contains_key("eyr")
 		&& opts.contains_key("hgt")
 		&& opts.contains_key("hcl")
 		&& opts.contains_key("ecl")
-		&& opts.contains_key("pid"));
-
-	println!("Count: {}", count);
+		&& opts.contains_key("pid"))
 }
 
-fn part_two() {
+fn part_two() -> usize {
 	let check_range = |value: &str, range: std::ops::RangeInclusive<usize>| range.contains(&value.parse::<usize>().unwrap());
 
 	// a # followed by exactly six characters 0-9 or a-f.
@@ -40,7 +38,7 @@ fn part_two() {
 			.iter()
 			.all(|c| b'0' <= *c && *c <= b'9');
 
-	let count = check_details(|opts| {
+	check_details(|opts| {
 		opts.get("byr").map_or(false, |value| check_range(value, 1920..=2002))
 			&& opts.get("iyr").map_or(false, |&value| check_range(value, 2010..=2020))
 			&& opts.get("eyr").map_or(false, |&value| check_range(value, 2020..=2030))
@@ -48,16 +46,13 @@ fn part_two() {
 			&& opts.get("hcl").map_or(false, |&value| check_hex(value))
 			&& opts.get("ecl").map_or(false, |&value| check_eyes(value))
 			&& opts.get("pid").map_or(false, |&value| check_passport(value))
-	});
-
-	println!("Count: {}", count);
+	})
 }
 
 fn check_details(handler: impl Fn(&HashMap<&'static str, &'static str>) -> bool) -> usize {
 	include_str!("../input/input.txt")
 		.split("\n\n")
-		.map(|line| line.split('\n')
-			.flat_map(|line| line.split(' '))
+		.map(|line| line.split_ascii_whitespace()
 			.filter_map(|line| line.split_once(':'))
 			.collect::<HashMap<&'static str, &'static str>>())
 		.filter(|opts| handler(&opts))
