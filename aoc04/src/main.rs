@@ -1,8 +1,21 @@
 #![feature(str_split_once)]
+#![feature(test)]
+
+extern crate test;
+
+macro_rules! measure {
+    ($expr:expr) => {{
+    	let stats = test::bench::iter(&mut || $expr);
+		let median = stats.median as usize;
+		let deviation = (stats.max - stats.min) as usize;
+		println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", stringify!($expr), median, deviation);
+		$expr
+    }};
+}
 
 use std::collections::HashMap;
 
-const FIELDS: &[(&'static str, fn(&'static str) -> bool)] = {
+static FIELDS: &[(&str, fn(&str) -> bool)] = {
 	#[inline(always)]
 	fn check_range(value: &str, range: std::ops::RangeInclusive<usize>) -> bool {
 		range.contains(&value.parse::<usize>().unwrap())
@@ -20,8 +33,8 @@ const FIELDS: &[(&'static str, fn(&'static str) -> bool)] = {
 };
 
 fn main() {
-	println!("Part One: {}", part_one());
-	println!("Part Two: {}", part_two());
+	println!("Part One: {}", measure!(part_one()));
+	println!("Part Two: {}", measure!(part_two()));
 }
 
 fn part_one() -> usize {
