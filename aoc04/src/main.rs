@@ -27,10 +27,7 @@ fn part_two() -> usize {
 			.skip(1)
 			.all(|c| b'0' <= *c && *c <= b'9' || b'a' <= *c && *c <= b'z');
 
-	let check_eyes = |input: &str| match input {
-		| "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth" => true,
-		_ => false,
-	};
+	let check_eyes = |input: &str| matches!(input, "amb" | "blu" | "brn" | "gry" | "grn" | "hzl" | "oth");
 
 	// a nine-digit number, including leading zeroes.
 	let check_passport = |input: &str|
