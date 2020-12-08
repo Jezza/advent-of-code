@@ -16,25 +16,41 @@ macro_rules! measure {
 }
 
 fn main() {
-	println!("Part One: {}", measure!(part_one()));
-	println!("Part Two: {}", measure!(part_two()));
+	let mut instructions = include_str!("../input/input.txt")
+		.lines()
+		.map(|line| {
+			let (instruction, value) = line.split_once(' ').unwrap();
+
+			let value = value.parse::<isize>().unwrap();
+
+			match instruction {
+				"nop" => Instruction::Nop(value),
+				"acc" => Instruction::Acc(value),
+				"jmp" => Instruction::Jmp(value),
+				_ => panic!("Unsupported instruction: {:?}", instruction),
+			}
+		})
+		.collect::<Box<[Instruction]>>();
+
+	println!("Part One: {}", measure!(part_one(instructions.clone())));
+	println!("Part Two: {}", measure!(part_two(instructions.clone())));
 	// println!("Part One: {}", part_one());
 	// println!("Part Two: {}", part_two());
 }
 
-fn part_one() -> isize {
-	handle_input(|ops, ip, _| {
+fn part_one(ops: Box<[Instruction]>) -> isize {
+	handle_input(ops, |ops, ip, _| {
 		let op = *ops.get(ip)?;
 		ops[ip] = Instruction::Trap;
 		Some(op)
 	})
 }
 
-fn part_two() -> isize {
+fn part_two(ops: Box<[Instruction]>) -> isize {
 	let mut branches = VecDeque::new();
 	let mut branching = false;
 
-	handle_input(|ops, ip, acc| {
+	handle_input(ops, |ops, ip, acc| {
 		let op = *ops.get(ip)?;
 
 		match op {
@@ -48,7 +64,7 @@ fn part_two() -> isize {
 			Instruction::Trap => {
 				branching = true;
 				let (ip, acc) = branches.pop_back()?;
-				return Some(Instruction::Reset(ip, acc))
+				return Some(Instruction::Reset(ip, acc));
 			}
 			_ => (),
 		}
@@ -68,32 +84,11 @@ enum Instruction {
 	Jmp(isize),
 }
 
-fn handle_input(mut handler: impl FnMut(&mut [Instruction], usize, isize) -> Option<Instruction>) -> isize {
-	let mut instructions = include_str!("../input/input.txt")
-		.lines()
-		.map(|line| {
-			let (instruction, value) = line.split_once(' ').unwrap();
-
-			let value = value.parse::<isize>().unwrap();
-
-			match instruction {
-				"nop" => Instruction::Nop(value),
-				"acc" => Instruction::Acc(value),
-				"jmp" => Instruction::Jmp(value),
-				_ => panic!("Unsupported instruction: {:?}", instruction),
-			}
-		})
-		.collect::<Box<[Instruction]>>();
-
-	// println!("{:#?}", instructions);
-
+fn handle_input(mut ops: Box<[Instruction]>, mut decoder: impl FnMut(&mut [Instruction], usize, isize) -> Option<Instruction>) -> isize {
 	let mut ip = 0usize;
 	let mut acc = 0isize;
 
-	while let Some(op) = handler(&mut instructions, ip, acc) {
-
-		// println!("Performing {:?}", op);
-
+	while let Some(op) = decoder(&mut ops, ip, acc) {
 		match op {
 			Instruction::Nop(_) => ip += 1,
 			Instruction::Acc(value) => {
