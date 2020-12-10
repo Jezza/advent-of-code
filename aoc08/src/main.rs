@@ -1,19 +1,8 @@
-#![feature(test)]
 #![feature(str_split_once)]
-
-extern crate test;
 
 use std::collections::{HashMap, VecDeque};
 
-macro_rules! measure {
-    ($expr:expr) => {{
-    	let stats = test::bench::iter(&mut || $expr);
-		let median = stats.median as usize;
-		let deviation = (stats.max - stats.min) as usize;
-		println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", stringify!($expr), median, deviation);
-		$expr
-    }};
-}
+use helper::measure;
 
 fn main() {
 	let mut instructions = include_str!("../input/input.txt")
@@ -97,7 +86,7 @@ fn handle_input(mut ops: Box<[Instruction]>, mut decoder: impl FnMut(&mut [Instr
 			}
 			Instruction::Jmp(value) => {
 				ip = (ip as isize + value) as usize
-			},
+			}
 			Instruction::Reset(new_ip, new_acc) => {
 				ip = new_ip;
 				acc = new_acc;
