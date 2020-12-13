@@ -4,57 +4,43 @@
 use helper::measure;
 
 fn main() {
-	// let mut input = parse_input();
-	// input.sort_unstable();
-	// let input = &input;
+	// println!("Part One: {}", measure!(part_one()));
+	// println!("Part Two: {}", measure!(part_two()));
+	println!("Part One: {}", part_one());
+	println!("Part Two: {}", part_two());
+}
 
-	println!("Part One: {}", measure!(part_one()));
-	println!("Part Two: {}", measure!(part_two()));
-	// println!("Part One: {}", part_one());
-	// println!("Part Two: {}", part_two());
+macro_rules! point {
+	($pos:expr, $width:expr) => {{
+		let x = $pos % $width;
+		let y = $pos / $width;
+		(x, y)
+	}};
+}
+
+macro_rules! diff {
+	($left:expr, $right:expr) => {{
+		let left = $left as isize;
+		let right = $right as isize;
+		if left > right {
+			left - right
+		} else {
+			right - left
+		}
+	}};
 }
 
 fn part_one() -> usize {
-	fn tick(current: &Grid, next: &mut Grid) {
-		let offsets: [isize; 8] = [
-			-(current.width as isize) - 1,
-			-(current.width as isize),
-			-(current.width as isize) + 1,
-			-1,
-			1,
-			(current.width as isize) - 1,
-			(current.width as isize),
-			(current.width as isize) + 1,
-		];
-
-		macro_rules! point {
-		    ($pos:expr) => {{
-		    	let x = $pos % current.width;
-				let y = $pos / current.width;
-		    	(x, y)
-		    }};
-		}
-		macro_rules! diff {
-		    ($left:expr, $right:expr) => {{
-		    	let left = $left as isize;
-		    	let right = $right as isize;
-				if left > right {
-					left - right
-				} else {
-					right - left
-				}
-		    }};
-		}
-
+	fn tick(offsets: &[isize], current: &Grid, next: &mut Grid) {
 		for (i, &v) in current.data.iter().enumerate() {
 			if v == b'.' {
 				continue;
 			}
 
-			let (x, y) = point!(i);
+			let (x, y) = point!(i, current.width);
 
 			let mut count = 0;
-			for &offset in &offsets {
+			for offset in offsets {
 				let pos = i as isize + offset;
 				if pos < 0 {
 					continue
@@ -64,7 +50,7 @@ fn part_one() -> usize {
 					continue;
 				}
 
-				let (their_x, their_y) = point!(pos);
+				let (their_x, their_y) = point!(pos, current.width);
 
 				if diff!(their_x, x) > 1 || diff!(their_y, y) > 1 {
 					continue;
@@ -90,68 +76,18 @@ fn part_one() -> usize {
 	stabilise_table(tick)
 }
 
-fn stabilise_table(tick: impl Fn(&Grid, &mut Grid)) -> usize {
-	let mut last = Grid::new();
-	let mut current = last.clone();
-	tick(&last, &mut current);
-
-	while current != last {
-		last.data.as_mut().copy_from_slice(&current.data);
-		tick(&last, &mut current)
-	}
-
-	let Grid {
-		data,
-		..
-	} = current;
-
-	data.into_vec()
-		.into_iter()
-		.filter(|&c| c == b'#')
-		.count()
-}
 
 fn part_two() -> usize {
-	fn tick(current: &Grid, next: &mut Grid) {
-		let offsets: [isize; 8] = [
-			-(current.width as isize) - 1,
-			-(current.width as isize),
-			-(current.width as isize) + 1,
-			-1,
-			1,
-			(current.width as isize) - 1,
-			(current.width as isize),
-			(current.width as isize) + 1,
-		];
-
-		macro_rules! point {
-		    ($pos:expr) => {{
-		    	let x = $pos % current.width;
-				let y = $pos / current.width;
-		    	(x, y)
-		    }};
-		}
-		macro_rules! diff {
-		    ($left:expr, $right:expr) => {{
-		    	let left = $left as isize;
-		    	let right = $right as isize;
-				if left > right {
-					left - right
-				} else {
-					right - left
-				}
-		    }};
-		}
-
+	fn tick(offsets: &[isize], current: &Grid, next: &mut Grid) {
 		for (i, &v) in current.data.iter().enumerate() {
 			if v == b'.' {
 				continue;
 			}
 
-			let (x, y) = point!(i);
+			let (x, y) = point!(i, current.width);
 
 			let mut count = 0;
-			for &offset in &offsets {
+			for offset in offsets {
 
 				let (mut prev_x, mut prev_y) = (x, y);
 				let mut pos = i as isize;
@@ -164,9 +100,8 @@ fn part_two() -> usize {
 					if pos >= current.len() {
 						break;
 					}
-					// println!("{}", pos);
 
-					let (their_x, their_y) = point!(pos);
+					let (their_x, their_y) = point!(pos, current.width);
 
 					if diff!(their_x, prev_x) > 1 || diff!(their_y, prev_y) > 1 {
 						break;
@@ -198,6 +133,42 @@ fn part_two() -> usize {
 	}
 
 	stabilise_table(tick)
+}
+
+fn stabilise_table(tick: impl Fn(&[isize], &Grid, &mut Grid)) -> usize {
+	let mut last = Grid::new();
+	let mut current = last.clone();
+
+	let offsets: [isize; 8] = {
+		let w = current.width as isize;
+
+		[
+			-w - 1,
+			-w,
+			-w + 1,
+			-1,
+			1,
+			w - 1,
+			w,
+			w + 1,
+		]
+	};
+
+	tick(&offsets, &last, &mut current);
+
+	while current != last {
+		last.data.as_mut().copy_from_slice(&current.data);
+		tick(&offsets, &last, &mut current)
+	}
+
+	let Grid {
+		data,
+		..
+	} = current;
+
+	data.iter()
+		.filter(|&&c| c == b'#')
+		.count()
 }
 
 #[derive(Debug, Clone, Eq, PartialEq)]
