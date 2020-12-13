@@ -1,13 +1,8 @@
 [package]
-name = "aoc08"
+name = "aoc11"
 version = "0.1.0"
 authors = ["Jezza <jezzadabomb@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-helper = { path = "../helper" }
-
-[features]
-default = []
-
-cached = []
+helper = { path = "../../helper" }
