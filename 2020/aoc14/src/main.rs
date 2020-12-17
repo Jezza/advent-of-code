@@ -108,3 +108,41 @@ fn decode<Mask, Parser, Decoder, Addresses>(parser: Parser, decoder: Decoder) ->
 		.copied()
 		.sum::<u64>() as usize
 }
+
+trait Decoder {
+	type Mask;
+
+
+}
+
+fn decode0<Mask, Parser, Decoder, Addresses>(parser: Parser, decoder: Decoder) -> usize
+	where
+		Mask: Clone,
+		Parser: Fn(&str) -> Mask,
+		Decoder: Fn(u64, u64, Mask) -> Addresses,
+		Addresses: Iterator<Item = (u64, u64)>,
+{
+	include_str!("../input/input.txt")
+		.split("mask = ")
+		.filter(|section| !section.is_empty())
+		.flat_map(|section| {
+			let mut lines = section.lines();
+
+			let mask = lines.next().unwrap();
+			let mask = parser(mask);
+
+			let decoder = &decoder;
+
+			lines.flat_map(move |part| {
+				let (address, value) = part.split_once("] = ").unwrap();
+				let address = address[4..].parse::<u64>().unwrap();
+				let value = value.parse::<u64>().unwrap();
+
+				decoder(address, value, mask.clone())
+			})
+		})
+		.collect::<HashMap<u64, u64>>()
+		.values()
+		.copied()
+		.sum::<u64>() as usize
+}
