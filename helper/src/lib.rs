@@ -31,3 +31,13 @@ macro_rules! measure {
     }};
 }
 
+#[macro_export]
+macro_rules! time {
+    ($expr:expr) => {{
+    	let start = ::std::time::Instant::now();
+    	let result = $expr;
+		println!("{}: {:?}", stringify!($expr), start.elapsed());
+    	result
+    }};
+}
+

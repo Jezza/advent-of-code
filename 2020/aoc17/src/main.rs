@@ -1,15 +1,17 @@
-#![feature(str_split_once)]
 #![feature(const_generics)]
 
 use std::collections::{HashMap, HashSet};
 
 use helper::measure;
+use helper::time;
 
 fn main() {
-	println!("Part One: {}", measure!(part_one()));
-	println!("Part Two: {}", measure!(part_two()));
-	// println!("Part Two: {}", part_one());
-	// println!("Part Two: {}", part_two());
+	// println!("Part One: {}", measure!(part_one()));
+	// println!("Part Two: {}", measure!(part_two()));
+	println!("Part Two: {}", time!(part_one()));
+	println!("Part Two: {}", time!(part_two()));
+	println!("Part Two: {}", time!(simulate::<5>()));
+	println!("Part Two: {}", time!(simulate::<6>()));
 }
 
 type Unit = i8;
@@ -20,39 +22,6 @@ fn part_one() -> usize {
 
 fn part_two() -> usize {
 	simulate::<4>()
-}
-
-fn gen_offsets<const N: usize>() -> impl Iterator<Item = [Unit; N]> {
-	use itertools::Itertools;
-
-	(0..N).map(|_| -1..=1)
-		.multi_cartesian_product()
-		.filter(|offset| offset.iter().any(|v| *v != 0))
-		.map(|offset| {
-			let mut output: [Unit; N] = [0; N];
-			offset.into_iter()
-				.enumerate()
-				.for_each(|(i, v)| output[i] = v as Unit);
-			output
-		})
-}
-
-fn count_neighbours<const N: usize>(offsets: &[[Unit; N]], active: &HashSet<[Unit; N]>) -> HashMap<[Unit; N], usize> {
-	active.iter()
-		.flat_map(|values| {
-			offsets.iter()
-				.map(move |offset: &[Unit; N]| {
-					let mut output: [Unit; N] = [0; N];
-					for i in 0..offset.len() {
-						output[i] = offset[i] + values[i];
-					}
-					output
-				})
-		})
-		.fold(HashMap::new(), |mut counts, pos| {
-			*counts.entry(pos).or_insert(0) += 1;
-			counts
-		})
 }
 
 fn simulate<const N: usize>() -> usize {
@@ -91,4 +60,38 @@ fn collect_input<const N: usize>() -> HashSet<[Unit; N]> {
 				})
 		})
 		.collect::<HashSet<_>>()
+}
+
+fn gen_offsets<const N: usize>() -> impl Iterator<Item = [Unit; N]> {
+	use itertools::Itertools;
+
+	(0..N).map(|_| -1..=1)
+		.multi_cartesian_product()
+		.filter(|offset| offset.iter().any(|v| *v != 0))
+		.map(|offset| {
+			offset.into_iter()
+				.enumerate()
+				.fold([0 as Unit; N], |mut acc, (i, v)| {
+					acc[i] = v as Unit;
+					acc
+				})
+		})
+}
+
+fn count_neighbours<const N: usize>(offsets: &[[Unit; N]], active: &HashSet<[Unit; N]>) -> HashMap<[Unit; N], usize> {
+	active.iter()
+		.flat_map(|values| {
+			offsets.iter()
+				.map(move |offset: &[Unit; N]| {
+					let mut output: [Unit; N] = [0; N];
+					for i in 0..offset.len() {
+						output[i] = offset[i] + values[i];
+					}
+					output
+				})
+		})
+		.fold(HashMap::new(), |mut counts, pos| {
+			*counts.entry(pos).or_insert(0) += 1;
+			counts
+		})
 }
