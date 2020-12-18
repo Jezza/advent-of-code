@@ -2,16 +2,14 @@
 
 use std::collections::{HashMap, HashSet};
 
-use helper::measure;
-use helper::time;
+use helper::{measure, time};
 
 fn main() {
 	// println!("Part One: {}", measure!(part_one()));
 	// println!("Part Two: {}", measure!(part_two()));
-	println!("Part Two: {}", time!(part_one()));
+	println!("Part One: {}", time!(part_one()));
 	println!("Part Two: {}", time!(part_two()));
 	println!("Part Two: {}", time!(simulate::<5>()));
-	println!("Part Two: {}", time!(simulate::<6>()));
 }
 
 type Unit = i8;
@@ -27,14 +25,13 @@ fn part_two() -> usize {
 fn simulate<const N: usize>() -> usize {
 	let mut active: HashSet<[Unit; N]> = collect_input();
 
-	let offsets = gen_offsets()
-		.collect::<Vec<_>>();
+	let offsets = gen_offsets();
 
 	for _ in 0..6 {
 		active = count_neighbours(&offsets, &active)
-			.iter()
-			.filter_map(|(pos, n)| match (active.contains(pos), n) {
-				(true, 2) | (_, 3) => Some(*pos),
+			.into_iter()
+			.filter_map(|(pos, n)| match (active.contains(&pos), n) {
+				(true, 2) | (_, 3) => Some(pos),
 				_ => None,
 			})
 			.collect();
@@ -62,7 +59,7 @@ fn collect_input<const N: usize>() -> HashSet<[Unit; N]> {
 		.collect::<HashSet<_>>()
 }
 
-fn gen_offsets<const N: usize>() -> impl Iterator<Item = [Unit; N]> {
+fn gen_offsets<const N: usize>() -> Vec<[Unit; N]> {
 	use itertools::Itertools;
 
 	(0..N).map(|_| -1..=1)
@@ -76,16 +73,21 @@ fn gen_offsets<const N: usize>() -> impl Iterator<Item = [Unit; N]> {
 					acc
 				})
 		})
+		.collect()
 }
 
-fn count_neighbours<const N: usize>(offsets: &[[Unit; N]], active: &HashSet<[Unit; N]>) -> HashMap<[Unit; N], usize> {
+fn count_neighbours<const N: usize>(
+	offsets: &[[Unit; N]],
+	active: &HashSet<[Unit; N]>,
+) -> HashMap<[Unit; N], usize> {
+
 	active.iter()
-		.flat_map(|values| {
+		.flat_map(|pos| {
 			offsets.iter()
-				.map(move |offset: &[Unit; N]| {
-					let mut output: [Unit; N] = [0; N];
+				.map(move |offset| {
+					let mut output = [0; N];
 					for i in 0..offset.len() {
-						output[i] = offset[i] + values[i];
+						output[i] = offset[i] + pos[i];
 					}
 					output
 				})
