@@ -16,7 +16,7 @@ enum Expr {
 	#[error]
 	Error,
 
-	#[regex("[0-9][_0-9]*", | lex | lex.slice().parse())]
+	#[regex("[0-9][_0-9]*", |lex| lex.slice().parse())]
 	Number(u64),
 
 	#[token("+", |_| 0)]
@@ -32,17 +32,15 @@ enum Expr {
 	RightParentheses,
 }
 
-fn parse_expr(input: &str, plus_precedence: u8, mul_precedence: u8) -> Vec<Expr> {
+fn parse_expr(input: &str, plus_precedence: u8) -> Vec<Expr> {
 	let mut output = vec![];
 	let mut operators = vec![];
 
 	Expr::lexer(input)
 		.into_iter()
 		.for_each(|mut token: Expr| {
-			match &mut token {
-				Expr::Plus(precedence) => *precedence = plus_precedence,
-				Expr::Multiply(precedence) => *precedence = mul_precedence,
-				_ => (),
+			if let Expr::Plus(precedence) = &mut token {
+				*precedence = plus_precedence;
 			}
 
 			match token {
@@ -120,7 +118,7 @@ fn eval(exprs: Vec<Expr>) -> u64 {
 fn part_one() -> u64 {
 	include_str!("../input/input.txt")
 		.lines()
-		.map(|line| parse_expr(line, 0, 0))
+		.map(|line| parse_expr(line, 0))
 		.map(eval)
 		.sum()
 }
@@ -128,7 +126,7 @@ fn part_one() -> u64 {
 fn part_two() -> u64 {
 	include_str!("../input/input.txt")
 		.lines()
-		.map(|line| parse_expr(line, 1, 0))
+		.map(|line| parse_expr(line, 1))
 		.map(eval)
 		.sum()
 }

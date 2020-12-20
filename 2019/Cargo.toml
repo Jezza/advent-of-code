@@ -1,0 +1,13 @@
+[package]
+name = "aoc-2019"
+version = "0.1.0"
+authors = ["Jezza <jezzadabomb@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+
+[[bin]]
+name = "day-01"
+
+[[bin]]
+name = "day-02"

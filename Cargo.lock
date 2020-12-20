@@ -16,6 +16,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2c0df63cb2955042487fad3aefd2c6e3ae7389ac5dc1beb28921de0b69f779d4"
 
 [[package]]
+name = "aoc-2019"
+version = "0.1.0"
+
+[[package]]
 name = "aoc01"
 version = "0.1.0"
 
@@ -120,6 +124,20 @@ version = "0.1.0"
 dependencies = [
  "helper",
  "logos",
+]
+
+[[package]]
+name = "aoc19"
+version = "0.1.0"
+dependencies = [
+ "helper",
+]
+
+[[package]]
+name = "aoc20"
+version = "0.1.0"
+dependencies = [
+ "helper",
 ]
 
 [[package]]
