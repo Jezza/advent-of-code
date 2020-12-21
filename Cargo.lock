@@ -138,6 +138,15 @@ name = "aoc20"
 version = "0.1.0"
 dependencies = [
  "helper",
+ "itertools",
+]
+
+[[package]]
+name = "aoc21"
+version = "0.1.0"
+dependencies = [
+ "helper",
+ "itertools",
 ]
 
 [[package]]
