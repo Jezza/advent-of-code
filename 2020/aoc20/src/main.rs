@@ -237,7 +237,7 @@ fn part_two() -> u64 {
 		})
 		.collect::<BTreeMap<_, _>>();
 
-	println!("{:#?}", adjacency_map);
+	// println!("{:#?}", adjacency_map);
 
 	let first_corner_piece = adjacency_map.iter()
 		.find(|&(id, adjacent)| adjacent.len() == 2)
@@ -284,9 +284,9 @@ fn part_two() -> u64 {
 			nearby.push(adjacent.id);
 		}
 
-		println!("-----");
+		// println!("-----");
 
-		println!("{:?} => {:#?}", point, nearby);
+		// println!("{:?} => {:#?}", point, nearby);
 
 		let found = {
 			let mut scores = adjacency_map.iter()
@@ -305,7 +305,7 @@ fn part_two() -> u64 {
 				.collect::<Vec<_>>();
 
 			scores.sort_unstable_by_key(|&(id, count)| count);
-			println!("Scores = {:#?}", scores);
+			// println!("Scores = {:#?}", scores);
 
 			let (id, _) = match scores.last().copied() {
 				Some(value) => value,
@@ -318,13 +318,13 @@ fn part_two() -> u64 {
 				.unwrap()
 		};
 
-		println!("{:?} => {:?}", point, found);
+		// println!("{:?} => {:?}", point, found);
 		used.insert(found.id);
 
 		grid_map.insert(point, found);
 	}
 
-	print!("{}", debug_grid(length, &grid_map));
+	// print!("{}", debug_grid(length, &grid_map));
 
 	// Definitely totally not hardcoded transforms to fit the grid...
 
@@ -372,7 +372,7 @@ fn part_two() -> u64 {
 
 	use itertools::Itertools;
 
-	println!("==========");
+	// println!("==========");
 
 	for point in enumerate_points(length).into_iter().skip(2) {
 		const OFFSETS: [(Point, Direction); 2] = [
@@ -553,12 +553,12 @@ fn part_two() -> u64 {
 				.map(|mut point| (point.0 - 1, point.1 - 1))
 				.collect::<HashSet<_>>();
 
-			if x <= 1 && y <= 1 {
-				let new_grid = Grid::new(size - 2, inner_grid.clone());
-				println!("Tile {}:", tile.id);
-				println!("{}", print_grid(&tile.grid));
-				println!("{}", print_grid(&new_grid));
-			}
+			// if x <= 1 && y <= 1 {
+			// 	let new_grid = Grid::new(size - 2, inner_grid.clone());
+			// 	println!("Tile {}:", tile.id);
+			// 	println!("{}", print_grid(&tile.grid));
+			// 	println!("{}", print_grid(&new_grid));
+			// }
 
 			full_map.extend(inner_grid.into_iter()
 				.map(|point| (point.0 + (y * 8), point.1 + (x * 8))));
@@ -571,7 +571,7 @@ fn part_two() -> u64 {
 	// full_grid.mirror_horizontal();
 	// full_grid.rotate_cw();
 
-	println!("{}", print_grid(&full_grid));
+	// println!("{}", print_grid(&full_grid));
 
 	let monster = r#"
                   #
@@ -581,7 +581,7 @@ fn part_two() -> u64 {
 
 	let monster = &monster[1..];
 
-	println!("==========\n{}", monster);
+	// println!("==========\n{}", monster);
 
 	let monster_height = monster.lines().count();
 	let monster_width = monster.lines()
@@ -599,8 +599,8 @@ fn part_two() -> u64 {
 				.map(move |(x, _)| (x, y))
 		})
 		.collect::<Vec<_>>();
-	println!("{:?}", monster);
-	println!("{}x{}", monster_width, monster_height);
+	// println!("{:?}", monster);
+	// println!("{}x{}", monster_width, monster_height);
 
 	//                   #
 	// #    ##    ##    ###
