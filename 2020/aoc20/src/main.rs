@@ -2,9 +2,7 @@
 #![feature(bool_to_option)]
 #![feature(array_value_iter)]
 
-use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
-
-use itertools::Itertools;
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 use helper::measure;
 use helper::time;
@@ -21,8 +19,6 @@ fn main() {
 #[derive(Debug, Copy, Clone)]
 enum Direction {
 	North,
-	South,
-	East,
 	West,
 }
 
@@ -52,7 +48,7 @@ impl Grid {
 			})
 			.collect::<HashSet<_>>();
 
-		let size = input.find("\n").unwrap();
+		let size = input.find('\n').unwrap();
 
 		Grid::new(size, data)
 	}
@@ -125,16 +121,12 @@ impl Tile {
 		let (id, input) = input.split_once(":\n").unwrap();
 
 		let id = id.split_once(" ")
-			.unwrap()
-			.1
-			.parse::<TileId>()
+			.and_then(|(_, id)| id.parse::<TileId>().ok())
 			.unwrap();
-
-		let grid = Grid::parse(input);
 
 		Tile {
 			id,
-			grid,
+			grid: Grid::parse(input),
 		}
 	}
 }
@@ -144,9 +136,6 @@ fn parse_input() -> (Vec<Tile>, HashMap<u16, Vec<TileId>>) {
 		.map(Tile::parse)
 		.collect::<Vec<_>>();
 
-	// println!("Tile {}", id);
-	// 	println!("{:0>10b}", sym);
-
 	let mut lookup = HashMap::new();
 
 	tiles.iter()
@@ -154,13 +143,11 @@ fn parse_input() -> (Vec<Tile>, HashMap<u16, Vec<TileId>>) {
 			let id = tile.id;
 
 			std::array::IntoIter::new(tile.grid.as_symmetries())
-				.map(move |sym| {
-					(id, sym)
-				})
+				.map(move |sym| (id, sym))
 		})
 		.for_each(|(id, sym)| {
 			lookup.entry(sym)
-				.or_insert_with(|| vec![])
+				.or_insert_with(Vec::new)
 				.push(id)
 		});
 
@@ -190,7 +177,6 @@ fn enumerate_points(length: isize) -> Vec<Point> {
 	let mut points = vec![];
 	for i in (1..length).rev() {
 		points.push((i, i));
-
 		for j in 1..i {
 			points.push((i, i - j));
 			points.push((i - j, i));
@@ -221,27 +207,21 @@ fn part_two() -> u64 {
 		})
 		.collect::<BTreeMap<_, _>>();
 
-	// println!("{:#?}", adjacency_map);
-
 	let first_corner_piece = adjacency_map.iter()
-		.find(|&(id, adjacent)| adjacent.len() == 2)
-		.map(|(&id, _)| id)
+		.find_map(|(id, adjacent)| (adjacent.len() == 2).then_some(*id))
 		.unwrap();
 
 	let length = (tiles.len() as f64).sqrt() as isize;
 
 	fn add(left: Point, right: Point) -> Option<Point> {
 		let point = (left.0 + right.0, left.1 + right.1);
-		if point.0 < 0 || point.1 < 0 {
-			None
-		} else {
-			Some(point)
-		}
+		(point.0 >= 0 && point.1 >= 0)
+			.then_some(point)
 	}
 
 	const OFFSETS: [(Point, Direction); 2] = [
-		((-1,  0), Direction::North),
-		(( 0, -1), Direction::West),
+		((-1, 0), Direction::North),
+		((0, -1), Direction::West),
 	];
 
 	let mut remove_tile = move |id: TileId| {
@@ -259,19 +239,14 @@ fn part_two() -> u64 {
 	used.insert(first_corner_piece);
 
 	for point in enumerate_points(length) {
-		// println!("=====");
-
 		let nearby = OFFSETS.iter()
 			.filter_map(|(offset, _)| add(point, *offset))
 			.filter_map(|point| grid_map.get(&point).map(|tile| tile.id))
 			.collect::<Vec<_>>();
 
-		// println!("-----");
-		// println!("{:?} => {:#?}", point, nearby);
-
 		let found = {
 			let mut scores = adjacency_map.iter()
-				.filter(|&(id, adjacent)| !used.contains(id))
+				.filter(|&(id, _)| !used.contains(id))
 				.map(|(id, adjacent)| {
 
 					// println!("{} => {:#?}", id, adjacent);
@@ -285,72 +260,47 @@ fn part_two() -> u64 {
 				.filter(|&(_, count)| count > 0)
 				.collect::<Vec<_>>();
 
-			scores.sort_unstable_by_key(|&(id, count)| count);
-			// println!("Scores = {:#?}", scores);
+			scores.sort_unstable_by_key(|&(_, count)| count);
 
-			let (id, _) = match scores.last().copied() {
-				Some(value) => value,
-				None => panic!("{}", debug_grid(length, &grid_map)),
-			};
-
-			remove_tile(id)
+			let (id, _) = scores.last().unwrap();
+			remove_tile(*id)
 		};
 
-		// println!("{:?} => {:?}", point, found);
 		used.insert(found.id);
 
 		grid_map.insert(point, found);
 	}
 
-	// print!("{}", debug_grid(length, &grid_map));
-
 	// I totally didn't hardcoded transforms to fit the grid...
 
 	if true {
-		{
-			let corner = grid_map.get_mut(&(0, 0)).unwrap();
-			corner.grid.mirror_horizontal();
-			corner.grid.rotate_cw();
-		}
+		let corner = grid_map.get_mut(&(0, 0)).unwrap();
+		corner.grid.mirror_horizontal();
+		corner.grid.rotate_cw();
 
-		{
-			let corner = grid_map.get_mut(&(0, 1)).unwrap();
-			corner.grid.mirror_horizontal();
-			corner.grid.rotate_cw();
-		}
+		let corner = grid_map.get_mut(&(0, 1)).unwrap();
+		corner.grid.mirror_horizontal();
+		corner.grid.rotate_cw();
 
-		{
-			let corner = grid_map.get_mut(&(1, 0)).unwrap();
-			corner.grid.rotate_cw();
-			corner.grid.rotate_cw();
-			corner.grid.mirror_horizontal();
-		}
+		let corner = grid_map.get_mut(&(1, 0)).unwrap();
+		corner.grid.rotate_cw();
+		corner.grid.rotate_cw();
+		corner.grid.mirror_horizontal();
 	} else {
-		{
-			let corner = grid_map.get_mut(&(0, 0)).unwrap();
-			corner.grid.rotate_cw();
-			corner.grid.rotate_cw();
-			corner.grid.mirror_horizontal();
-		}
+		let corner = grid_map.get_mut(&(0, 0)).unwrap();
+		corner.grid.rotate_cw();
+		corner.grid.rotate_cw();
+		corner.grid.mirror_horizontal();
 
-		{
-			let corner = grid_map.get_mut(&(0, 1)).unwrap();
-			corner.grid.rotate_cw();
-			corner.grid.mirror_horizontal();
-			corner.grid.rotate_cw();
-		}
+		let corner = grid_map.get_mut(&(0, 1)).unwrap();
+		corner.grid.rotate_cw();
+		corner.grid.mirror_horizontal();
+		corner.grid.rotate_cw();
 
-		{
-			let corner = grid_map.get_mut(&(1, 0)).unwrap();
-			corner.grid.rotate_cw();
-			corner.grid.mirror_horizontal();
-		}
+		let corner = grid_map.get_mut(&(1, 0)).unwrap();
+		corner.grid.rotate_cw();
+		corner.grid.mirror_horizontal();
 	}
-
-
-	use itertools::Itertools;
-
-	// println!("==========");
 
 	for point in enumerate_points(length).into_iter().skip(2) {
 		let syms = grid_map.get(&point)
@@ -367,17 +317,14 @@ fn part_two() -> u64 {
 				let border = match direction {
 					Direction::North => neighbour_grid.south(),
 					Direction::West => neighbour_grid.east(),
-					_ => panic!(),
 				};
 
 				syms.iter()
 					.enumerate()
-					.filter(move |&(i, sym)| *sym == border)
+					.filter(move |&(_, sym)| *sym == border)
 					.map(move |(i, _)| (i, direction))
 			})
 			.collect::<Vec<_>>();
-
-		// println!("{:?} => {:?}", point, orientations);
 
 		let this = grid_map.get_mut(&point).unwrap();
 
@@ -388,7 +335,9 @@ fn part_two() -> u64 {
 
 		match orientation {
 			(0, Direction::North) | (1, Direction::West) | (6, Direction::West) => {}
-			(1, Direction::North) | (4, Direction::West) => this.grid.mirror_horizontal(),
+			(1, Direction::North) | (4, Direction::West) => {
+				this.grid.mirror_horizontal()
+			}
 			(2, Direction::North) | (7, Direction::West) => {
 				this.grid.mirror_horizontal();
 				this.grid.rotate_cw();
@@ -428,7 +377,6 @@ fn part_two() -> u64 {
 				match direction {
 					Direction::North => (direction, neighbour_grid.south(), north),
 					Direction::West => (direction, neighbour_grid.east(), west),
-					_ => unreachable!(),
 				}
 			})
 			.filter(|(_, theirs, ours)| *theirs != *ours)
@@ -443,28 +391,6 @@ fn part_two() -> u64 {
 	// At this point the map is orientated correctly...
 	// Now, it's time to shove it all together into one big map.
 
-	fn print_grid(grid: &Grid) -> String {
-		let mut output = String::new();
-
-		let size = grid.size;
-
-		for y in 0..size {
-			for x in 0..size {
-				let point = (x, y);
-
-				if grid.data.contains(&point) {
-					output.push('#');
-				} else {
-					output.push('.');
-				}
-			}
-
-			output.push('\n');
-		}
-
-		output
-	}
-
 	let mut full_map = HashSet::new();
 
 	for x in 0usize..length as usize {
@@ -477,15 +403,8 @@ fn part_two() -> u64 {
 			let inner_grid = tile.grid.data
 				.iter()
 				.filter(|&point| point.0 != 0 && point.0 != size - 1 && point.1 != 0 && point.1 != size - 1)
-				.map(|mut point| (point.0 - 1, point.1 - 1))
+				.map(|point| (point.0 - 1, point.1 - 1))
 				.collect::<HashSet<_>>();
-
-			// if x <= 1 && y <= 1 {
-			// 	let new_grid = Grid::new(size - 2, inner_grid.clone());
-			// 	println!("Tile {}:", tile.id);
-			// 	println!("{}", print_grid(&tile.grid));
-			// 	println!("{}", print_grid(&new_grid));
-			// }
 
 			full_map.extend(inner_grid.into_iter()
 				.map(|point| (point.0 + (y * 8), point.1 + (x * 8))));
@@ -495,20 +414,11 @@ fn part_two() -> u64 {
 	let full_size = length as usize * 8;
 	let mut full_grid = Grid::new(full_size, full_map);
 
-	// full_grid.mirror_horizontal();
-	// full_grid.rotate_cw();
-
-	// println!("{}", print_grid(&full_grid));
-
-	let monster = r#"
+	let monster = r"\
                   #
 #    ##    ##    ###
  #  #  #  #  #  #
-	"#;
-
-	let monster = &monster[1..];
-
-	// println!("==========\n{}", monster);
+	";
 
 	let monster_height = monster.lines().count();
 	let monster_width = monster.lines()
@@ -516,7 +426,7 @@ fn part_two() -> u64 {
 		.max()
 		.unwrap();
 
-	let monster =  monster.lines()
+	let monster = monster.lines()
 		.enumerate()
 		.flat_map(|(y, line)| {
 			line.as_bytes()
@@ -526,15 +436,9 @@ fn part_two() -> u64 {
 				.map(move |(x, _)| (x, y))
 		})
 		.collect::<Vec<_>>();
-	// println!("{:?}", monster);
-	// println!("{}x{}", monster_width, monster_height);
 
-	//                   #
-	// #    ##    ##    ###
-	//  #  #  #  #  #  #
-
-	let mut count = 0usize;
-
+	let mut count = 0;
+	// 8 symmetries of a square
 	for i in 0..8 {
 		match i {
 			0 => (),
@@ -546,7 +450,6 @@ fn part_two() -> u64 {
 
 		for y in 0..(full_size - monster_height) {
 			for x in 0..(full_size - monster_width) {
-
 				let found = monster.iter()
 					.map(|point| (point.0 + x, point.1 + y))
 					.all(|point| full_grid.data.contains(&point));
@@ -557,32 +460,11 @@ fn part_two() -> u64 {
 			}
 		}
 
-		if count > 0 {
+		if count != 0 {
+			// Thankfully only need to worry about one orientation.
 			break;
 		}
-
-		count = 0;
 	}
 
 	(full_grid.data.len() - count * monster.len()) as u64
-}
-
-fn debug_grid(length: isize, grid_map: &HashMap<Point, Tile>) -> String {
-	let mut output = String::new();
-
-	for x in 0..length {
-		for y in 0..length {
-			let point = (x, y);
-
-			let tile = grid_map.get(&point)
-				.map(|tile| tile.id)
-				.unwrap_or(0);
-
-			output.push_str(&format!("{}, ", tile));
-		}
-
-		output.push('\n');
-	}
-
-	output
 }
