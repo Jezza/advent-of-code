@@ -71,14 +71,14 @@ impl Grid {
 
 	fn as_symmetries(&self) -> [u16; 8] {
 		[
-			self.north(),          // 0
-			self.north_reversed(), // 1
-			self.south(),          // 2
-			self.south_reversed(), // 3
-			self.east(),           // 4
-			self.east_reversed(),  // 5
-			self.west(),           // 6
-			self.west_reversed(),  // 7
+			self.north(),                     // 0
+			self.north().reverse_bits() >> 6, // 1
+			self.south(),                     // 2
+			self.south().reverse_bits() >> 6, // 3
+			self.east(),                      // 4
+			self.east().reverse_bits() >> 6,  // 5
+			self.west(),                      // 6
+			self.west().reverse_bits() >> 6,  // 7
 		]
 	}
 
@@ -93,32 +93,16 @@ impl Grid {
 		self.fold_points(|point| (point.1 == 0).then_some(point.0 as u16))
 	}
 
-	fn north_reversed(&self) -> u16 {
-		self.north().reverse_bits() >> 6
-	}
-
 	fn south(&self) -> u16 {
 		self.fold_points(|point| (point.1 == self.size - 1).then_some(point.0 as u16))
-	}
-
-	fn south_reversed(&self) -> u16 {
-		self.south().reverse_bits() >> 6
 	}
 
 	fn east(&self) -> u16 {
 		self.fold_points(|point| (point.0 == self.size - 1).then_some(point.1 as u16))
 	}
 
-	fn east_reversed(&self) -> u16 {
-		self.east().reverse_bits() >> 6
-	}
-
 	fn west(&self) -> u16 {
 		self.fold_points(|point| (point.0 == 0).then_some(point.1 as u16))
-	}
-
-	fn west_reversed(&self) -> u16 {
-		self.west().reverse_bits() >> 6
 	}
 }
 
@@ -246,9 +230,6 @@ fn part_two() -> u64 {
 
 	let length = (tiles.len() as f64).sqrt() as isize;
 
-	let mut grid_map: HashMap<Point, Tile> = HashMap::new();
-	grid_map.insert((0, 0), tiles.iter().find(|tile| tile.id == first_corner_piece).unwrap().clone());
-
 	fn add(left: Point, right: Point) -> Option<Point> {
 		let point = (left.0 + right.0, left.1 + right.1);
 		if point.0 < 0 || point.1 < 0 {
@@ -258,10 +239,21 @@ fn part_two() -> u64 {
 		}
 	}
 
-	const OFFSETS: [Point; 2] = [
-		(-1, 0),
-		(0, -1),
+	const OFFSETS: [(Point, Direction); 2] = [
+		((-1,  0), Direction::North),
+		(( 0, -1), Direction::West),
 	];
+
+	let mut remove_tile = move |id: TileId| {
+		let index = tiles.iter()
+			.position(|tile| tile.id == id)
+			.unwrap();
+
+		tiles.swap_remove(index)
+	};
+
+	let mut grid_map: HashMap<Point, Tile> = HashMap::new();
+	grid_map.insert((0, 0), remove_tile(first_corner_piece));
 
 	let mut used = HashSet::new();
 	used.insert(first_corner_piece);
@@ -269,23 +261,12 @@ fn part_two() -> u64 {
 	for point in enumerate_points(length) {
 		// println!("=====");
 
-		let mut nearby = vec![];
-
-		for offset in &OFFSETS {
-			let adjacent = add(point, *offset)
-				.and_then(|point| grid_map.get(&point));
-
-			let adjacent = match adjacent {
-				Some(adjacent) => adjacent,
-				None => continue,
-			};
-
-			// println!("{:?} => {:?}", adjacent_point, adjacent);
-			nearby.push(adjacent.id);
-		}
+		let nearby = OFFSETS.iter()
+			.filter_map(|(offset, _)| add(point, *offset))
+			.filter_map(|point| grid_map.get(&point).map(|tile| tile.id))
+			.collect::<Vec<_>>();
 
 		// println!("-----");
-
 		// println!("{:?} => {:#?}", point, nearby);
 
 		let found = {
@@ -312,10 +293,7 @@ fn part_two() -> u64 {
 				None => panic!("{}", debug_grid(length, &grid_map)),
 			};
 
-			tiles.iter()
-				.find(|tile| tile.id == id)
-				.cloned()
-				.unwrap()
+			remove_tile(id)
 		};
 
 		// println!("{:?} => {:?}", point, found);
@@ -326,7 +304,7 @@ fn part_two() -> u64 {
 
 	// print!("{}", debug_grid(length, &grid_map));
 
-	// Definitely totally not hardcoded transforms to fit the grid...
+	// I totally didn't hardcoded transforms to fit the grid...
 
 	if true {
 		{
@@ -375,11 +353,6 @@ fn part_two() -> u64 {
 	// println!("==========");
 
 	for point in enumerate_points(length).into_iter().skip(2) {
-		const OFFSETS: [(Point, Direction); 2] = [
-			((-1,  0), Direction::North),
-			(( 0, -1), Direction::West),
-		];
-
 		let syms = grid_map.get(&point)
 			.unwrap()
 			.grid
@@ -413,27 +386,15 @@ fn part_two() -> u64 {
 			None => panic!("Unable to find neighbour for: {}", this.id),
 		};
 
-		// self.north(),          // 0
-		// self.north_reversed(), // 1
-		// self.south(),          // 2
-		// self.south_reversed(), // 3
-		// self.east(),           // 4
-		// self.east_reversed(),  // 5
-		// self.west(),           // 6
-		// self.west_reversed(),  // 7
-
 		match orientation {
-			(0, Direction::North) => {
-			}
-			(1, Direction::North) => {
-				this.grid.mirror_horizontal();
-			}
-			(2, Direction::North) => {
+			(0, Direction::North) | (1, Direction::West) | (6, Direction::West) => {}
+			(1, Direction::North) | (4, Direction::West) => this.grid.mirror_horizontal(),
+			(2, Direction::North) | (7, Direction::West) => {
 				this.grid.mirror_horizontal();
 				this.grid.rotate_cw();
 				this.grid.rotate_cw();
 			}
-			(3, Direction::North) => {
+			(3, Direction::North) | (5, Direction::West) => {
 				this.grid.rotate_cw();
 				this.grid.rotate_cw();
 			}
@@ -442,43 +403,18 @@ fn part_two() -> u64 {
 				this.grid.rotate_cw();
 				this.grid.rotate_cw();
 			}
-			(5, Direction::North) => {
+			(5, Direction::North) | (3, Direction::West) => {
 				this.grid.mirror_horizontal();
 				this.grid.rotate_cw();
 			}
-			(6, Direction::North) => {
+			(6, Direction::North) | (0, Direction::West) => {
 				this.grid.rotate_cw();
 				this.grid.mirror_horizontal();
 			}
-			(7, Direction::North) => {
+			(7, Direction::North) | (2, Direction::West) => {
 				this.grid.rotate_cw();
 			}
-			(0, Direction::West) => {
-				this.grid.rotate_cw();
-				this.grid.mirror_horizontal();
-			}
-			(1, Direction::West) => {}
-			(2, Direction::West) => {
-				this.grid.rotate_cw();
-			}
-			(3, Direction::West) => {
-				this.grid.mirror_horizontal();
-				this.grid.rotate_cw();
-			}
-			(4, Direction::West) => {
-				this.grid.mirror_horizontal();
-			}
-			(5, Direction::West) => {
-				this.grid.rotate_cw();
-				this.grid.rotate_cw();
-			}
-			(6, Direction::West) => {}
-			(7, Direction::West) => {
-				this.grid.mirror_horizontal();
-				this.grid.rotate_cw();
-				this.grid.rotate_cw();
-			}
-			_ => todo!(),
+			_ => unreachable!(),
 		}
 
 		let north = this.grid.north();
@@ -487,22 +423,13 @@ fn part_two() -> u64 {
 		let borders = OFFSETS.iter()
 			.filter_map(|(offset, direction)| add(point, *offset).map(|point| (point, *direction)))
 			.map(|(point, direction)| {
-				let neighbour = grid_map.get(&point).unwrap();
-				let neighbour_grid = &neighbour.grid;
+				let neighbour_grid = &grid_map.get(&point).unwrap().grid;
 
-				let neighbour_border = match direction {
-					Direction::North => neighbour_grid.south(),
-					Direction::West => neighbour_grid.east(),
-					_ => panic!(),
-				};
-
-				let our_border = match direction {
-					Direction::North => north,
-					Direction::West => west,
-					_ => panic!(),
-				};
-
-				(direction, neighbour_border, our_border)
+				match direction {
+					Direction::North => (direction, neighbour_grid.south(), north),
+					Direction::West => (direction, neighbour_grid.east(), west),
+					_ => unreachable!(),
+				}
 			})
 			.filter(|(_, theirs, ours)| *theirs != *ours)
 			.collect::<Vec<_>>();
@@ -609,20 +536,12 @@ fn part_two() -> u64 {
 	let mut count = 0usize;
 
 	for i in 0..8 {
-
 		match i {
 			0 => (),
-			1 | 2 | 3 => {
-
-				full_grid.rotate_cw();
-			}
-			4 => {
-				full_grid.mirror_horizontal();
-			}
-			5 | 6 | 7 => {
-				full_grid.rotate_cw();
-			}
-			_ => (),
+			1 | 2 | 3 => full_grid.rotate_cw(),
+			4 => full_grid.mirror_horizontal(),
+			5 | 6 | 7 => full_grid.rotate_cw(),
+			_ => unreachable!(),
 		}
 
 		for y in 0..(full_size - monster_height) {
