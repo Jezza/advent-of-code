@@ -220,8 +220,8 @@ fn part_two() -> u64 {
 	}
 
 	const OFFSETS: [(Point, Direction); 2] = [
-		((-1, 0), Direction::North),
-		((0, -1), Direction::West),
+		((-1,  0), Direction::North),
+		(( 0, -1), Direction::West),
 	];
 
 	let mut remove_tile = move |id: TileId| {
@@ -249,8 +249,6 @@ fn part_two() -> u64 {
 				.filter(|&(id, _)| !used.contains(id))
 				.map(|(id, adjacent)| {
 
-					// println!("{} => {:#?}", id, adjacent);
-
 					let count = adjacent.iter()
 						.filter(|&adjacent_id| nearby.contains(adjacent_id))
 						.count();
@@ -267,20 +265,52 @@ fn part_two() -> u64 {
 		};
 
 		used.insert(found.id);
-
 		grid_map.insert(point, found);
+	}
+
+	fn transform_grid(grid: &mut Grid, orientation: &(usize, Direction)) {
+		match orientation {
+			| (0, Direction::North) | (1, Direction::West) | (6, Direction::West) => {}
+			| (1, Direction::North) | (4, Direction::West) => {
+				grid.mirror_horizontal()
+			}
+			| (2, Direction::North) | (7, Direction::West) => {
+				grid.mirror_horizontal();
+				grid.rotate_cw();
+				grid.rotate_cw();
+			}
+			| (3, Direction::North) | (5, Direction::West) => {
+				grid.rotate_cw();
+				grid.rotate_cw();
+			}
+			(4, Direction::North) => {
+				grid.rotate_cw();
+				grid.rotate_cw();
+				grid.rotate_cw();
+			}
+			| (5, Direction::North) | (3, Direction::West) => {
+				grid.mirror_horizontal();
+				grid.rotate_cw();
+			}
+			| (6, Direction::North) | (0, Direction::West) => {
+				grid.rotate_cw();
+				grid.mirror_horizontal();
+			}
+			| (7, Direction::North) | (2, Direction::West) => {
+				grid.rotate_cw();
+			}
+			_ => unreachable!(),
+		}
 	}
 
 	// I totally didn't hardcoded transforms to fit the grid...
 
 	if true {
 		let corner = grid_map.get_mut(&(0, 0)).unwrap();
-		corner.grid.mirror_horizontal();
-		corner.grid.rotate_cw();
+		transform_grid(&mut corner.grid, &(5, Direction::North));
 
 		let corner = grid_map.get_mut(&(0, 1)).unwrap();
-		corner.grid.mirror_horizontal();
-		corner.grid.rotate_cw();
+		transform_grid(&mut corner.grid, &(5, Direction::North));
 
 		let corner = grid_map.get_mut(&(1, 0)).unwrap();
 		corner.grid.rotate_cw();
@@ -298,8 +328,7 @@ fn part_two() -> u64 {
 		corner.grid.rotate_cw();
 
 		let corner = grid_map.get_mut(&(1, 0)).unwrap();
-		corner.grid.rotate_cw();
-		corner.grid.mirror_horizontal();
+		transform_grid(&mut corner.grid, &(6, Direction::North));
 	}
 
 	for point in enumerate_points(length).into_iter().skip(2) {
@@ -309,7 +338,8 @@ fn part_two() -> u64 {
 			.as_symmetries();
 
 		let orientations = OFFSETS.iter()
-			.filter_map(|(offset, direction)| add(point, *offset).map(|point| (point, *direction)))
+			.filter_map(|(offset, direction)| add(point, *offset)
+				.map(|point| (point, *direction)))
 			.flat_map(|(point, direction)| {
 				let neighbour = grid_map.get(&point).unwrap();
 				let neighbour_grid = &neighbour.grid;
@@ -333,59 +363,7 @@ fn part_two() -> u64 {
 			None => panic!("Unable to find neighbour for: {}", this.id),
 		};
 
-		match orientation {
-			(0, Direction::North) | (1, Direction::West) | (6, Direction::West) => {}
-			(1, Direction::North) | (4, Direction::West) => {
-				this.grid.mirror_horizontal()
-			}
-			(2, Direction::North) | (7, Direction::West) => {
-				this.grid.mirror_horizontal();
-				this.grid.rotate_cw();
-				this.grid.rotate_cw();
-			}
-			(3, Direction::North) | (5, Direction::West) => {
-				this.grid.rotate_cw();
-				this.grid.rotate_cw();
-			}
-			(4, Direction::North) => {
-				this.grid.rotate_cw();
-				this.grid.rotate_cw();
-				this.grid.rotate_cw();
-			}
-			(5, Direction::North) | (3, Direction::West) => {
-				this.grid.mirror_horizontal();
-				this.grid.rotate_cw();
-			}
-			(6, Direction::North) | (0, Direction::West) => {
-				this.grid.rotate_cw();
-				this.grid.mirror_horizontal();
-			}
-			(7, Direction::North) | (2, Direction::West) => {
-				this.grid.rotate_cw();
-			}
-			_ => unreachable!(),
-		}
-
-		let north = this.grid.north();
-		let west = this.grid.west();
-
-		let borders = OFFSETS.iter()
-			.filter_map(|(offset, direction)| add(point, *offset).map(|point| (point, *direction)))
-			.map(|(point, direction)| {
-				let neighbour_grid = &grid_map.get(&point).unwrap().grid;
-
-				match direction {
-					Direction::North => (direction, neighbour_grid.south(), north),
-					Direction::West => (direction, neighbour_grid.east(), west),
-				}
-			})
-			.filter(|(_, theirs, ours)| *theirs != *ours)
-			.collect::<Vec<_>>();
-
-		if !borders.is_empty() {
-			println!("{:#?}", borders);
-			break;
-		}
+		transform_grid(&mut this.grid, orientation);
 	}
 
 	// At this point the map is orientated correctly...
@@ -441,10 +419,9 @@ fn part_two() -> u64 {
 	// 8 symmetries of a square
 	for i in 0..8 {
 		match i {
-			0 => (),
-			1 | 2 | 3 => full_grid.rotate_cw(),
-			4 => full_grid.mirror_horizontal(),
-			5 | 6 | 7 => full_grid.rotate_cw(),
+			| 0 => (),
+			| 4 => full_grid.mirror_horizontal(),
+			| 1 | 2 | 3 | 5 | 6 | 7 => full_grid.rotate_cw(),
 			_ => unreachable!(),
 		}
 
