@@ -2,51 +2,44 @@
 
 use itertools::Itertools;
 
-use helper::measure;
+use helper::{measure, time};
 
 const INPUT: &str = include_str!("../input/input.txt");
 
 fn main() {
 	// println!("Part One: {}", measure!(part_one()));
-	// println!("Part Two: {}", measure!(part_two()));
-	println!("Part One: {}", part_one());
-	println!("Part Two: {}", part_two());
+	// println!("Part One: {}", measure!(part_one()));
+	println!("Part One: {}", time!(part_one()));
+	println!("Part Two: {}", time!(part_two()));
 }
 
-fn part_one() -> usize {
-	let numbers = INPUT.bytes()
+fn run_task(n: usize) -> usize {
+	let input = INPUT.bytes()
 		.map(|c| c - b'0')
 		.collect::<Box<[u8]>>();
 
+	std::iter::successors(Some(input), |previous: &Box<[u8]>| {
+		let next = previous.iter()
+			.group_by(|&c| *c)
+			.into_iter()
+			.flat_map(|(k, group)| {
+				format!("{}{}", group.count() as u8, k)
+					.into_bytes()
+					.into_iter()
+					.map(|c| c - b'0')
+			})
+			.collect();
+		Some(next)
+	}).skip(n)
+		.next()
+		.unwrap()
+		.len()
+}
 
-	// let mut it = std::iter::successors(Some(numbers), |previous: &Box<[u8]>| {
-	// 	Some(numbers(&previous))
-	// });
-
-	// fn numbers(input: &[u8]) -> Box<[u8]> {
-	// 	todo!()
-	// }
-
-	// let mut numbers = vec![];
-
-	// let mut numbers =
-
-	// for i in 0..40 {
-	//
-	// }
-
-
-	// let mut output = String::new();
-	// for (k, group) in &group {
-	// 	output.push_str(&format!("{}{}", group.count(), k));
-	// }
-
-	// println!("{}", output);
-	//
-	// output.len()
-	0
+fn part_one() -> usize {
+	run_task(40)
 }
 
 fn part_two() -> usize {
-	0
+	run_task(50)
 }
