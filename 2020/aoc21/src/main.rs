@@ -33,7 +33,7 @@ fn parse_line(line: &'static str) -> Food {
 	(ingredients, allergens)
 }
 
-fn parse_input0() -> (Vec<Food>, HashMap<&'static str, &'static str>) {
+fn parse_input() -> (Vec<Food>, HashMap<&'static str, &'static str>) {
 	let lines = INPUT.lines()
 		.map(|line| parse_line(line))
 		.collect::<Vec<_>>();
@@ -60,7 +60,7 @@ fn parse_input0() -> (Vec<Food>, HashMap<&'static str, &'static str>) {
 }
 
 fn part_one() -> u64 {
-	let (lines, allergen_map) = parse_input0();
+	let (lines, allergen_map) = parse_input();
 
 	let allergens = allergen_map.values().collect::<HashSet<_>>();
 
@@ -71,7 +71,7 @@ fn part_one() -> u64 {
 }
 
 fn part_two() -> String {
-	let (_, allergen_map) = parse_input0();
+	let (_, allergen_map) = parse_input();
 	allergen_map.iter()
 		.sorted()
 		.map(|(_, i)| i)

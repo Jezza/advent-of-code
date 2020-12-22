@@ -270,7 +270,9 @@ fn part_two() -> u64 {
 
 	fn transform_grid(grid: &mut Grid, orientation: &(usize, Direction)) {
 		match orientation {
-			| (0, Direction::North) | (1, Direction::West) | (6, Direction::West) => {}
+			| (0, Direction::North) | (1, Direction::West) | (6, Direction::West) => {
+				todo!()
+			}
 			| (1, Direction::North) | (4, Direction::West) => {
 				grid.mirror_horizontal()
 			}
@@ -301,6 +303,16 @@ fn part_two() -> u64 {
 			}
 			_ => unreachable!(),
 		}
+	}
+
+	{
+		let corner = grid_map.get_mut(&(0, 0)).unwrap();
+		// transform_grid(&mut corner.grid, &(5, Direction::North));
+
+		// std::array::IntoIter::new(corner.grid.as_symmetries())
+		// 	.filter(|sym| {
+		// 		let t = lookup.get(sym);
+		// 	})
 	}
 
 	// I totally didn't hardcoded transforms to fit the grid...

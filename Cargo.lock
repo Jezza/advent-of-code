@@ -149,6 +149,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc22"
+version = "0.1.0"
+dependencies = [
+ "helper",
+ "itertools",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -191,6 +199,14 @@ name = "day-07"
 version = "0.1.0"
 dependencies = [
  "helper",
+]
+
+[[package]]
+name = "day-10"
+version = "0.1.0"
+dependencies = [
+ "helper",
+ "itertools",
 ]
 
 [[package]]
