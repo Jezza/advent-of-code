@@ -173,6 +173,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc25"
+version = "0.1.0"
+dependencies = [
+ "helper",
+]
+
+[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
