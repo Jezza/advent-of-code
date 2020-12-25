@@ -14,11 +14,17 @@ fn main() {
 	println!("Part Two: {}", time!(part_two()));
 }
 
-fn part_one() -> impl std::fmt::Display {
+type Value = u32;
 
+fn parse_input() -> (Value, Value) {
 	let (card, door) = INPUT.split_once("\n").unwrap();
-	let card = card.parse::<usize>().unwrap();
-	let door = door.parse::<usize>().unwrap();
+	let card = card.parse().unwrap();
+	let door = door.parse().unwrap();
+	(card, door)
+}
+
+fn part_one() -> impl std::fmt::Display {
+	let (card, door) = parse_input();
 
 	let mut value = 1;
 	let mut iter = 0;
@@ -34,9 +40,27 @@ fn part_one() -> impl std::fmt::Display {
 		card
 	};
 
-	(0..iter).fold(1usize, |acc, _| acc * public_key % 20201227)
+	(0..iter).fold(1 as Value, |acc, _| acc * public_key % 20201227)
 }
 
 fn part_two() -> impl std::fmt::Display {
-	0
+	let (card, door) = parse_input();
+
+	let hash = |value, subject| value * subject % 20201227;
+
+	let (left, right) = if card > door {
+		(door, card)
+	} else {
+		(card, door)
+	};
+
+	let mut value = hash(1, 7);
+	let mut key = hash(1, right);
+
+	while left != value {
+		value = hash(value, 7);
+		key = hash(key, right);
+	}
+
+	key
 }
