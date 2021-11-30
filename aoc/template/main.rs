@@ -1,14 +1,15 @@
 use commons::*;
 
 const INPUT: &str = {
+	// ""
 	include_str!("../input/input.txt")
 };
 
 fn main() {
-	measure!(part_one());
+	// measure!(part_one());
 	println!("Part One: {}", part_one());
 
-	measure!(part_two());
+	// measure!(part_two());
 	println!("Part Two: {}", part_two());
 }
 

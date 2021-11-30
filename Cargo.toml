@@ -3,6 +3,7 @@ members = [
 	"aoc",
 	"commons",
 
+	"2015/day-01",
 	"2015/day-07",
 	"2015/day-10",
 
