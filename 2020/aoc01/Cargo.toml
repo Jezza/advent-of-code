@@ -1,8 +1,0 @@
-[package]
-name = "aoc01"
-version = "0.1.0"
-authors = ["Jezza <jezzadabomb@gmail.com>"]
-edition = "2021"
-
-[dependencies]
-#anyhow = "*"

@@ -1,0 +1,15 @@
+[package]
+name = "aoc"
+version = "0.1.0"
+authors = ["Jezza <jezzadabomb@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+structopt = "0.3.25"
+anyhow = "1.0.51"
+#toml = "0.5.8"
+toml_edit = "0.10.0"
+#cargo_metadata = "0.14.1"
+#cargo-manifest = "0.2.6"
+parse-display = "0.5.3"
+#handlebars = "4.1.5"

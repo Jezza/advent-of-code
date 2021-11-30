@@ -2,7 +2,7 @@
 
 use itertools::Itertools;
 
-use helper::{measure, time};
+use commons::{measure, time};
 
 const INPUT: &str = include_str!("../input/input.txt");
 
