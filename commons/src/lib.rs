@@ -1,17 +1,37 @@
 #![feature(test)]
+#![feature(type_name_of_val)]
+
+pub mod export {
+	pub mod itertools {
+		pub use itertools::*;
+	}
+}
 
 pub mod test_export {
 	extern crate test;
 
 	pub use test::*;
 
-	pub fn measure<T>(name: &'static str, mut func: impl Fn() -> T) -> T {
-		let stats = test::bench::iter(&mut func);
-		let median = stats.median as usize;
-		let deviation = (stats.max - stats.min) as usize;
+	pub fn print_measure<T>(name: &'static str, func: impl Fn() -> T) -> T {
+		let (median, deviation) = measure(&func);
 		println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", name, median, deviation);
 		func()
 	}
+
+	pub fn measure<T>(mut func: impl Fn() -> T) -> (usize, usize) {
+		let stats = test::bench::iter(&mut func);
+		let median = stats.median as usize;
+		let deviation = (stats.max - stats.min) as usize;
+		(median, deviation)
+	}
+
+	// pub fn measure<T>(name: &'static str, mut func: impl Fn() -> T) -> T {
+	// 	let stats = test::bench::iter(&mut func);
+	// 	let median = stats.median as usize;
+	// 	let deviation = (stats.max - stats.min) as usize;
+	// 	println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", name, median, deviation);
+	// 	func()
+	// }
 }
 
 // macro_rules! measure {
@@ -27,7 +47,7 @@ pub mod test_export {
 #[macro_export]
 macro_rules! measure {
     ($expr:expr) => {{
-    	::commons::test_export::measure(stringify!($expr), || $expr)
+    	::commons::test_export::print_measure(stringify!($expr), || $expr)
     }};
 }
 
@@ -41,3 +61,64 @@ macro_rules! time {
     }};
 }
 
+pub fn aoc<I, O, F, P>(
+	handler: F,
+	it: P
+)
+where
+	I: Copy,
+	F: Fn(I) -> O,
+	P: IntoIterator<Item = (I, O)>,
+	O: PartialEq + std::fmt::Display,
+{
+	let name = std::any::type_name::<F>();
+	println!("{}", name);
+
+	let mut iter = it.into_iter();
+
+	#[allow(unused_assignments, unused_mut)]
+	let mut measure = true;
+	#[cfg(debug_assertions)]
+	{
+		measure = false;
+	}
+
+	while let Some(item) = iter.next() {
+		let item: (I, O) = item;
+		let (
+			input,
+			expected,
+		) = item;
+
+		let got = handler(input);
+
+		if got != expected {
+			println!("\t{:>22} != {}", got, expected);
+			if measure {
+				continue;
+			} else {
+				break;
+			}
+		}
+
+		if measure {
+			let func = || handler(input);
+			let (median, deviation) = test_export::measure(&func);
+			println!("\t{:>22}\tbench:\t{:>11} ns/iter (+/- {})", expected, median, deviation);
+		} else {
+			println!("\t{:>22}", expected);
+		}
+
+		// let value = if measure {
+		// 	let t = test_export::measure(&func);
+		// } else {
+		// 	func()
+		// };
+
+		// println!("\t{}: {}", name, value);
+		// if output != value {
+		// 	println!("\t{} != {}", value, output);
+		// }
+		// assert_eq!(output, value);
+	}
+}

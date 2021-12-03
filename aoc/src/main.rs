@@ -101,6 +101,12 @@ fn main() -> anyhow::Result<()> {
 				base.push("input.txt");
 				base
 			};
+			let test_input = {
+				let mut base = base.join("input");
+				std::fs::create_dir_all(&base)?;
+				base.push("test-1.txt");
+				base
+			};
 
 			// println!("{}", cargo.display());
 			// println!("{}", main.display());
@@ -118,6 +124,7 @@ fn main() -> anyhow::Result<()> {
 			std::fs::write(&cargo, cargo_content)?;
 			std::fs::write(&main, main_content)?;
 			std::fs::write(&input, "")?;
+			std::fs::write(&test_input, "")?;
 		}
 	}
 

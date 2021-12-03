@@ -44,7 +44,28 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc-2015-02"
+version = "0.1.0"
+dependencies = [
+ "commons",
+]
+
+[[package]]
 name = "aoc-2021-01"
+version = "0.1.0"
+dependencies = [
+ "commons",
+]
+
+[[package]]
+name = "aoc-2021-02"
+version = "0.1.0"
+dependencies = [
+ "commons",
+]
+
+[[package]]
+name = "aoc-2021-03"
 version = "0.1.0"
 dependencies = [
  "commons",
@@ -287,6 +308,9 @@ dependencies = [
 [[package]]
 name = "commons"
 version = "0.1.0"
+dependencies = [
+ "itertools",
+]
 
 [[package]]
 name = "day-07"
