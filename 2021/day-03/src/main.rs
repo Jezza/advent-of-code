@@ -4,22 +4,42 @@ fn main() {
 	const TEST_1: &str = include_str!("../input/test-1.txt");
 	const INPUT: &str = include_str!("../input/input.txt");
 
-	aoc(part_one,
+	aoc(
+		part_one,
 		vec![
 			(TEST_1, 198),
 			(INPUT, 4191876),
 		],
 	);
-	aoc(part_two,
+	aoc(
+		part_two,
 		vec![
 			(TEST_1, 230),
 			(INPUT, 3414905),
 		],
 	);
+
+	let test_1 = time!(read_input(TEST_1));
+	let input = time!(read_input(INPUT));
+
+	aoc(
+		part_one_existing_input,
+		vec![
+			(test_1.clone(), 198),
+			(input.clone(), 4191876),
+		],
+	);
+	aoc(
+		part_two_existing_input,
+		vec![
+			(test_1, 230),
+			(input, 3414905),
+		],
+	);
 }
 
 fn read_input(input: &str) -> (Vec<u16>, u16, u16) {
-	let values: Vec<_> = input.lines()
+	let values = input.lines()
 		.filter_map(|line| u16::from_str_radix(line, 2).ok())
 		.collect();
 
@@ -28,7 +48,7 @@ fn read_input(input: &str) -> (Vec<u16>, u16, u16) {
 		.max()
 		.unwrap() as u16;
 
-	let mask: u16 = (0..bits).into_iter()
+	let mask = (0..bits).into_iter()
 		.map(|bit| 1 << bit)
 		.sum();
 
@@ -53,8 +73,11 @@ fn generate_report_bit(
 }
 
 fn part_one(input: &str) -> u32 {
-	let (values, bits, mask) = read_input(input);
+	let input = read_input(input);
+	part_one_existing_input(input)
+}
 
+fn part_one_existing_input((values, bits, mask): (Vec<u16>, u16, u16)) -> u32 {
 	let report: u16 = (0..bits).rev()
 		.map(|bit| {
 			if generate_report_bit(bit, &values) {
@@ -71,17 +94,18 @@ fn part_one(input: &str) -> u32 {
 }
 
 fn part_two(input: &str) -> u32 {
-	let (values, bits, _) = read_input(input);
+	let input = read_input(input);
+	part_two_existing_input(input)
+}
 
+fn part_two_existing_input((values, bits, _): (Vec<u16>, u16, u16)) -> u32 {
 	let generator = |signal: bool| {
 		let mut values = values.clone();
-
-		let signal = if signal { 1 } else { 0 };
 
 		for bit in (0..bits).rev() {
 			let enabled = generate_report_bit(bit, &values);
 
-			values.retain(|value| ((value >> bit) & 1 == signal) == enabled);
+			values.retain(|value| ((value >> bit) & 1 == signal as u16) == enabled);
 
 			if values.len() <= 1 {
 				break;

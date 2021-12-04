@@ -66,7 +66,7 @@ pub fn aoc<I, O, F, P>(
 	it: P
 )
 where
-	I: Copy,
+	I: Clone,
 	F: Fn(I) -> O,
 	P: IntoIterator<Item = (I, O)>,
 	O: PartialEq + std::fmt::Display,
@@ -90,7 +90,7 @@ where
 			expected,
 		) = item;
 
-		let got = handler(input);
+		let got = handler(input.clone());
 
 		if got != expected {
 			println!("\t{:>22} != {}", got, expected);
@@ -102,7 +102,7 @@ where
 		}
 
 		if measure {
-			let func = || handler(input);
+			let func = || handler(input.clone());
 			let (median, deviation) = test_export::measure(&func);
 			println!("\t{:>22}\tbench:\t{:>11} ns/iter (+/- {})", expected, median, deviation);
 		} else {
@@ -121,4 +121,39 @@ where
 		// }
 		// assert_eq!(output, value);
 	}
+}
+
+pub mod grid {
+	pub fn find_grid_size(
+		input: &str,
+	) -> (usize, usize) {
+		let height = input.lines()
+			.count();
+
+		let width = input.lines()
+			.map(|line| {
+				line.split_ascii_whitespace()
+					.filter(|segment| !segment.is_empty())
+					.count()
+			})
+			.max()
+			.unwrap();
+
+		(width, height)
+	}
+
+	pub fn parse_grid(
+		input: &str,
+		mut func: impl FnMut(usize, usize, &str),
+	) {
+		input.lines()
+			.enumerate()
+			.for_each(|(y, line)| {
+				line.split_ascii_whitespace()
+					.filter(|segment| !segment.is_empty())
+					.enumerate()
+					.for_each(|(x, segment)| func(x, y, segment));
+			});
+	}
+
 }
