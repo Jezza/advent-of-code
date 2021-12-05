@@ -137,23 +137,66 @@ pub mod grid {
 					.count()
 			})
 			.max()
-			.unwrap();
+			.unwrap_or_default();
 
 		(width, height)
 	}
 
-	pub fn parse_grid(
+	pub fn parse_grid<F>(
 		input: &str,
-		mut func: impl FnMut(usize, usize, &str),
-	) {
+		mut func: F,
+	)
+	where
+		F: FnMut(usize, usize, &str),
+	{
+
+		// let mut x = 0;
+		// let mut y = 0;
+		//
+		// {
+		// 	let bytes = input.as_bytes();
+		// 	let mut index = 0;
+		// 	let mut start = 0;
+		// 	while index < bytes.len() {
+		// 		let byte = bytes[index];
+		//
+		// 		if byte == b' ' {
+		//
+		// 			let segment = &input[start..index];
+		// 			if !segment.is_empty() {
+		//
+		// 				x += 1;
+		// 			}
+		//
+		// 			index += 1;
+		// 			continue;
+		// 		} else if byte == b'\n' {
+		//
+		// 			x = 0;
+		// 			y += 1;
+		// 		}
+		//
+		//
+		// 	}
+		// }
+
+		// println!("===\n{}\n===", input);
+		// input.split(|c: char| c == '\n' || c.is_ascii_whitespace())
+		// 	.filter(|segment| !segment.is_empty())
+		// 	.for_each(|segment| {
+		// 		println!("{}", segment);
+		// 	});
+
+
 		input.lines()
+			.filter(|line| !line.is_empty())
 			.enumerate()
 			.for_each(|(y, line)| {
 				line.split_ascii_whitespace()
 					.filter(|segment| !segment.is_empty())
 					.enumerate()
-					.for_each(|(x, segment)| func(x, y, segment));
-			});
+					.for_each(|(x, segment)| func(x, y, segment))
+			})
 	}
 
 }
