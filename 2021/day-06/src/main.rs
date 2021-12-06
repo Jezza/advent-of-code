@@ -27,8 +27,10 @@ fn solve(input: &str, days: u16) -> u64 {
 		.filter_map(|v| v.parse::<u8>().ok())
 		.for_each(|v| counts[v as usize] += 1);
 
+	let mut scratch_space = EMPTY;
+
 	for _ in 0..days {
-		counts = counts.into_iter()
+		scratch_space = counts.into_iter()
 			.enumerate()
 			.fold(EMPTY, |mut counts, (i, v)| {
 				if i == 0 {
@@ -39,6 +41,8 @@ fn solve(input: &str, days: u16) -> u64 {
 				}
 				counts
 			});
+
+		std::mem::swap(&mut scratch_space, &mut counts);
 	}
 
 	counts.into_iter()
