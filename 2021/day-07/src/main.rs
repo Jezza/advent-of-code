@@ -32,7 +32,7 @@ fn part_one(input: &str) -> u32 {
 }
 
 fn part_two(input: &str) -> u32 {
-	let mut positions = parse!(input, i32, ",");
+	let positions = parse!(input, i32, ",");
 
 	let average = positions.iter().sum::<i32>() / positions.len() as i32;
 	let check = |average| {
