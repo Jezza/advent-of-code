@@ -88,8 +88,6 @@ where
 	let name = std::any::type_name::<F>();
 	println!("{}", name);
 
-	let mut iter = it.into_iter();
-
 	#[allow(unused_assignments, unused_mut)]
 	let mut measure = true;
 	#[cfg(debug_assertions)]
@@ -97,7 +95,7 @@ where
 		measure = false;
 	}
 
-	while let Some(item) = iter.next() {
+	for item in it {
 		let item: (I, O) = item;
 		let (
 			input,
