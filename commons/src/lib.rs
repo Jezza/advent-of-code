@@ -45,6 +45,20 @@ pub mod test_export {
 // }
 
 #[macro_export]
+macro_rules! parse {
+    ($input:expr, $ty:ty) => {{
+		$input.lines()
+			.filter_map(|v| v.trim().parse::<$ty>().ok())
+			.collect::<Vec<_>>()
+	}};
+	($input:expr, $ty:ty, $sep:literal) => {{
+		$input.split($sep)
+			.filter_map(|v| v.trim().parse::<$ty>().ok())
+			.collect::<Vec<_>>()
+	}};
+}
+
+#[macro_export]
 macro_rules! measure {
     ($expr:expr) => {{
     	::commons::test_export::print_measure(stringify!($expr), || $expr)

@@ -21,9 +21,7 @@ fn main() {
 }
 
 fn part_one(input: &str) -> u32 {
-	let mut positions: Vec<_> = input.split(",")
-		.filter_map(|v| v.trim().parse::<i32>().ok())
-		.collect();
+	let mut positions = parse!(input, i32, ",");
 
 	positions.sort_unstable();
 
@@ -34,9 +32,7 @@ fn part_one(input: &str) -> u32 {
 }
 
 fn part_two(input: &str) -> u32 {
-	let mut positions: Vec<_> = input.split(",")
-		.filter_map(|v| v.trim().parse::<i32>().ok())
-		.collect();
+	let mut positions = parse!(input, i32, ",");
 
 	let average = positions.iter().sum::<i32>() / positions.len() as i32;
 	let check = |average| {
