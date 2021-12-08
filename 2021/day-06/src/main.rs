@@ -19,35 +19,21 @@ fn main() {
 }
 
 fn solve(input: &str, days: u16) -> u64 {
-	const EMPTY: [u64; 9] = [0; 9];
-
-	let mut counts = EMPTY;
+	let mut counts = [0u64; 9];
 
 	input.split(",")
 		.filter_map(|v| v.parse::<u8>().ok())
 		.for_each(|v| counts[v as usize] += 1);
 
-	let mut scratch_space = EMPTY;
-
 	for _ in 0..days {
-		scratch_space = counts.into_iter()
-			.enumerate()
-			.fold(EMPTY, |mut counts, (i, v)| {
-				if i == 0 {
-					counts[8] += v;
-					counts[6] += v;
-				} else {
-					counts[i as usize - 1] += v;
-				}
-				counts
-			});
-
-		std::mem::swap(&mut scratch_space, &mut counts);
+		let v = counts[0];
+		counts.copy_within(1..9, 0);
+		counts[8] = v;
+		counts[6] += v;
 	}
 
 	counts.into_iter()
-		.map(|v| v as u64)
-		.sum::<u64>()
+		.sum()
 }
 
 fn part_one(input: &str) -> u64 {
