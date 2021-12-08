@@ -36,123 +36,44 @@ fn frequencies(segments: &str) -> [u8; 7] {
 	frequencies
 }
 
-fn determine_sequences(sequences: &str) -> [&str; 10] {
-	/*
-	Various segments:
+fn calculate_number(frequencies: [u8; 7], sequence: &str) -> u16 {
+	let sum: u16 = sequence.as_bytes()
+		.iter()
+		.map(|c| *c - b'a')
+		.map(|i| frequencies[i as usize] as u16)
+		.sum();
 
-	  00000
-	 1     2
-	 1     2
-	 1     2
-	  33333
-	 4     5
-	 4     5
-	 4     5
-	  66666
-	 */
-	let (segment_1, segment_4, segment_5) = {
-		let mut segment_1 = ' ';
-		let mut segment_4 = ' ';
-		let mut segment_5 = ' ';
-
-		for (i, frequency) in frequencies(sequences).into_iter().enumerate() {
-			match frequency {
-				6 => segment_1 = (b'a' + i as u8) as char,
-				4 => segment_4 = (b'a' + i as u8) as char,
-				9 => segment_5 = (b'a' + i as u8) as char,
-				// Segment 3 and 6
-				7 => {}
-				// Segment 0 and 2
-				8 => {}
-				_ => (),
-			}
-		}
-
-		(segment_1, segment_4, segment_5)
-	};
-
-	// num -> sequence
-	let mut known_sequences = [""; 10];
-
-	let mut sequences: Vec<_> = sequences.split_ascii_whitespace()
-		.collect();
-
-	// Knock out the easy ones.
-	sequences.retain(|sequence| {
-		match sequence.len() {
-			2 => known_sequences[1] = sequence,
-			4 => known_sequences[4] = sequence,
-			3 => known_sequences[7] = sequence,
-			7 => known_sequences[8] = sequence,
-			// 5 => 2, 3, 5
-			// 6 => 0, 6, 9
-			5 | 6 => {
-				return true
-			},
-			l => panic!("Unknown length: {}", l),
-		};
-
-		false
-	});
-
-	// 1 is built from two segments (2 and 5), we know 5 from the frequencies, so we can deduce 2.
-	let segment_2 = known_sequences[1].chars()
-		.find(|c| *c != segment_5)
-		.unwrap();
-
-	macro_rules! remove_first {
-	    (|$name:ident| $filter:expr) => {{
-			let i = sequences.iter()
-				.position(|$name| $filter)
-				.expect("Unable to find valid sequence.");
-			sequences.remove(i)
-		}};
+	match sum {
+		39 => 3,
+		41 => 6,
+		25 => 7,
+		34 => 2,
+		17 => 1,
+		45 => 9,
+		30 => 4,
+		42 => 0,
+		37 => 5,
+		49 => 8,
+		_ => panic!("Unknown number: {}", sum),
 	}
-
-	known_sequences[2] = remove_first!(|sequence| sequence.len() == 5 && !sequence.contains(segment_5));
-	known_sequences[5] = remove_first!(|sequence| sequence.len() == 5 && sequence.contains(segment_1));
-	known_sequences[3] = remove_first!(|sequence| sequence.len() == 5);
-	known_sequences[6] = remove_first!(|sequence| !sequence.contains(segment_2));
-	known_sequences[9] = remove_first!(|sequence| !sequence.contains(segment_4));
-	known_sequences[0] = sequences.remove(0);
-
-	if !sequences.is_empty() {
-		panic!("{:?}", sequences);
-	}
-
-	known_sequences
 }
 
-fn determine_sum(display: &str, sequences: [&str; 10]) -> u64 {
-	let display = String::from(display);
+fn calculate_display_output(sequences: &str, display: &str) -> u64 {
+	let frequencies = frequencies(sequences);
 
-	// @FIXME Jezza - 08 Dec. 2021: Not ideal...
-	//  Short of allocating an intermediate collection to deal with this, it's fine...
 	display.rsplit(" ")
 		.enumerate()
-		.fold(0, |acc, (i, value)| {
-			let value = value.as_bytes();
-			let pos = sequences.iter()
-				.position(|sequence| {
-					// I bring shame on my family...
-					// In practice, it's not a problem, because they're about short 7 segment displays.
-					sequence.len() == value.len()
-						&& sequence.as_bytes().iter().all(|b| value.contains(b))
-				})
-				.unwrap();
-
+		.map(|(i, sequence)| {
+			let num = calculate_number(frequencies, sequence);
 			let shift = 10u32.pow(i as u32);
-			acc + shift * pos as u32
-		}) as u64
+			shift * num as u32
+		})
+		.sum::<u32>() as u64
 }
 
 fn part_two(input: &str) -> u64 {
 	input.lines()
 		.filter_map(|line| line.split_once(" | "))
-		.map(|(sequences, display)| {
-			let sequences = determine_sequences(sequences);
-
-			determine_sum(display, sequences)
-		})
+		.map(|(sequences, display)| calculate_display_output(sequences, display))
 		.sum()
 }
