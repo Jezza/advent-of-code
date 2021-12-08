@@ -36,13 +36,26 @@ fn frequencies(segments: &str) -> [u8; 7] {
 	frequencies
 }
 
-fn determine_sequence(segments: &str) -> [&str; 10] {
+fn determine_sequences(sequences: &str) -> [&str; 10] {
+	/*
+	Various segments:
+
+	  00000
+	 1     2
+	 1     2
+	 1     2
+	  33333
+	 4     5
+	 4     5
+	 4     5
+	  66666
+	 */
 	let (segment_1, segment_4, segment_5) = {
 		let mut segment_1 = ' ';
 		let mut segment_4 = ' ';
 		let mut segment_5 = ' ';
 
-		for (i, frequency) in frequencies(segments).into_iter().enumerate() {
+		for (i, frequency) in frequencies(sequences).into_iter().enumerate() {
 			match frequency {
 				6 => segment_1 = (b'a' + i as u8) as char,
 				4 => segment_4 = (b'a' + i as u8) as char,
@@ -58,18 +71,19 @@ fn determine_sequence(segments: &str) -> [&str; 10] {
 		(segment_1, segment_4, segment_5)
 	};
 
-	let mut parts = [""; 10];
+	// num -> sequence
+	let mut known_sequences = [""; 10];
 
-	let mut segments: Vec<_> = segments.split_ascii_whitespace()
+	let mut sequences: Vec<_> = sequences.split_ascii_whitespace()
 		.collect();
 
 	// Knock out the easy ones.
-	segments.retain(|segment| {
-		match segment.len() {
-			2 => parts[1] = segment,
-			4 => parts[4] = segment,
-			3 => parts[7] = segment,
-			7 => parts[8] = segment,
+	sequences.retain(|sequence| {
+		match sequence.len() {
+			2 => known_sequences[1] = sequence,
+			4 => known_sequences[4] = sequence,
+			3 => known_sequences[7] = sequence,
+			7 => known_sequences[8] = sequence,
 			// 5 => 2, 3, 5
 			// 6 => 0, 6, 9
 			5 | 6 => {
@@ -82,39 +96,39 @@ fn determine_sequence(segments: &str) -> [&str; 10] {
 	});
 
 	// 1 is built from two segments (2 and 5), we know 5 from the frequencies, so we can deduce 2.
-	let segment_2 = parts[1].chars()
+	let segment_2 = known_sequences[1].chars()
 		.find(|c| *c != segment_5)
 		.unwrap();
 
 	macro_rules! seek {
 	    ($num:expr, |$name:ident| $filter:expr) => {{
-			let i = segments.iter()
+			let i = sequences.iter()
 				.position(|$name| $filter)
 				.expect(concat!("Unable to locate number ", stringify!($num),"..."));
-			parts[$num] = segments.remove(i);
+			known_sequences[$num] = sequences.remove(i);
 		}};
 	}
 
-	seek!(2, |segment| segment.len() == 5 && !segment.contains(segment_5));
-	seek!(5, |segment| segment.len() == 5 && segment.contains(segment_1));
-	seek!(3, |segment| segment.len() == 5);
-	seek!(6, |segment| !segment.contains(segment_2));
-	seek!(9, |segment| !segment.contains(segment_4));
+	seek!(2, |sequence| sequence.len() == 5 && !sequence.contains(segment_5));
+	seek!(5, |sequence| sequence.len() == 5 && sequence.contains(segment_1));
+	seek!(3, |sequence| sequence.len() == 5);
+	seek!(6, |sequence| !sequence.contains(segment_2));
+	seek!(9, |sequence| !sequence.contains(segment_4));
 
-	parts[0] = segments.remove(0);
+	known_sequences[0] = sequences.remove(0);
 
-	if !segments.is_empty() {
-		panic!("{:?}", segments);
+	if !sequences.is_empty() {
+		panic!("{:?}", sequences);
 	}
 
-	parts
+	known_sequences
 }
 
 fn part_two(input: &str) -> u64 {
 	input.lines()
 		.filter_map(|line| line.split_once(" | "))
 		.map(|(segments, display)| {
-			let segments = determine_sequence(segments);
+			let sequences = determine_sequences(segments);
 
 			// @FIXME Jezza - 08 Dec. 2021: Not ideal...
 			//  Short of allocating an intermediate collection to deal with this, it's fine...
@@ -124,13 +138,12 @@ fn part_two(input: &str) -> u64 {
 					let shift = 10u32.pow(i as u32);
 
 					let value = value.as_bytes();
-					let pos = segments.iter()
-						.position(|segment| {
-							// Technically, this is O(n^3)...
+					let pos = sequences.iter()
+						.position(|sequence| {
 							// I bring shame on my family...
 							// In practice, it's not a problem, because they're about short 7 segment displays.
-							segment.len() == value.len()
-								&& segment.as_bytes().iter().all(|b| value.contains(b))
+							sequence.len() == value.len()
+								&& sequence.as_bytes().iter().all(|b| value.contains(b))
 						})
 						.unwrap();
 
