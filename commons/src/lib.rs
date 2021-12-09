@@ -136,79 +136,47 @@ where
 }
 
 pub mod grid {
-	pub fn find_grid_size(
-		input: &str,
-	) -> (usize, usize) {
-		let height = input.lines()
-			.count();
+	pub fn parse_grid<'a, G, F, H, CF, CI, RF, RI>(
+		column_splitter: CF,
+		row_splitter: RF,
+		input: &'a str,
+		grid: F,
+		mut func: H
+	) -> G
+	where
+		CF: Fn(&'a str) -> CI,
+		RF: Fn(&'a str) -> RI,
+		CI: Iterator<Item = &'a str>,
+		RI: Iterator<Item = &'a str>,
+		F: Fn(usize, usize) -> G,
+		H: FnMut(&mut G, usize, usize, &'a str)
+	{
 
-		let width = input.lines()
+		let (mut height, width) = row_splitter(input)
+			.filter(|line| !line.is_empty())
 			.map(|line| {
-				line.split_ascii_whitespace()
+				column_splitter(line)
 					.filter(|segment| !segment.is_empty())
 					.count()
 			})
+			.enumerate()
 			.max()
-			.unwrap_or_default();
+			.unwrap();
+		// `enumerate` starts at 0, so we need to bump it up by one.
+		height += 1;
 
-		(width, height)
-	}
+		let mut grid = grid(width, height);
 
-	pub fn parse_grid<F>(
-		input: &str,
-		mut func: F,
-	)
-	where
-		F: FnMut(usize, usize, &str),
-	{
-
-		// let mut x = 0;
-		// let mut y = 0;
-		//
-		// {
-		// 	let bytes = input.as_bytes();
-		// 	let mut index = 0;
-		// 	let mut start = 0;
-		// 	while index < bytes.len() {
-		// 		let byte = bytes[index];
-		//
-		// 		if byte == b' ' {
-		//
-		// 			let segment = &input[start..index];
-		// 			if !segment.is_empty() {
-		//
-		// 				x += 1;
-		// 			}
-		//
-		// 			index += 1;
-		// 			continue;
-		// 		} else if byte == b'\n' {
-		//
-		// 			x = 0;
-		// 			y += 1;
-		// 		}
-		//
-		//
-		// 	}
-		// }
-
-		// println!("===\n{}\n===", input);
-		// input.split(|c: char| c == '\n' || c.is_ascii_whitespace())
-		// 	.filter(|segment| !segment.is_empty())
-		// 	.for_each(|segment| {
-		// 		println!("{}", segment);
-		// 	});
-
-
-		input.lines()
+		row_splitter(input)
 			.filter(|line| !line.is_empty())
 			.enumerate()
 			.for_each(|(y, line)| {
-				line.split_ascii_whitespace()
+				column_splitter(line)
 					.filter(|segment| !segment.is_empty())
 					.enumerate()
-					.for_each(|(x, segment)| func(x, y, segment))
-			})
-	}
+					.for_each(|(x, segment)| func(&mut grid, x, y, segment))
+			});
 
+		grid
+	}
 }

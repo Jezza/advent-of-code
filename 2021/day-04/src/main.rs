@@ -29,23 +29,20 @@ struct Grid {
 
 impl Grid {
 	fn new(board: &str) -> Self {
-		let (width, height) = grid::find_grid_size(board);
-
-		let mut values = [(0, false); 5 * 5];
-		if values.len() != width * height {
-			panic!("Oi, twat, your assumptions are bad and you should feel bad...");
-		}
-
-		grid::parse_grid(board, |x, y, segment| {
-			let pos = y * width + x;
-			values[pos].0 = segment.parse().unwrap();
-		});
-
-		Grid {
-			width,
-			height,
-			values,
-		}
+		grid::parse_grid(
+			str::split_ascii_whitespace,
+			str::lines,
+			board,
+			|width, height| Grid {
+				width,
+				height,
+				values: [(0, false); 5 * 5],
+			},
+			|grid, x, y, segment| {
+				let pos = y * grid.width + x;
+				grid.values[pos].0 = segment.parse().unwrap();
+			}
+		)
 	}
 
 	fn sum(&self) -> u32 {
