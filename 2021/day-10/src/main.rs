@@ -1,5 +1,3 @@
-#![feature(let_else)]
-
 use commons::*;
 
 fn main() {
@@ -22,23 +20,25 @@ fn main() {
 
 fn stack(line: &str) -> Result<Vec<u8>, u8> {
 	let mut stack = vec![];
+
 	for b in line.as_bytes() {
-		let (expect, got) = match b {
+		let expect = match b {
 			b'[' | b'(' | b'{' | b'<' => {
 				stack.push(*b);
 				continue;
 			}
-			b']' => (b'[', stack.pop().unwrap()),
-			b')' => (b'(', stack.pop().unwrap()),
-			b'}' => (b'{', stack.pop().unwrap()),
-			b'>' => (b'<', stack.pop().unwrap()),
+			b']' => b'[',
+			b')' => b'(',
+			b'}' => b'{',
+			b'>' => b'<',
 			_ => panic!("Unexpected {}", *b as char),
 		};
 
-		if expect != got {
+		if expect != stack.pop().unwrap() {
 			return Err(expect);
 		}
 	}
+
 	Ok(stack)
 }
 
@@ -58,9 +58,9 @@ fn part_one(input: &str) -> u64 {
 fn part_two(input: &str) -> u64 {
 	let mut scores = input.lines()
 		.filter_map(|line| stack(line).ok())
-		.map(|mut stack| {
-			stack.reverse();
+		.map(|stack| {
 			stack.into_iter()
+				.rev()
 				.fold(0u64, |score, value| {
 					score * 5 + match value {
 						b'(' => 1,

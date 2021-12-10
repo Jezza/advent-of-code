@@ -55,14 +55,9 @@ impl Command {
 	}
 }
 
-#[inline(always)]
-fn read_input(input: &str) -> impl Iterator<Item = Command> + '_ {
-	input.lines()
-		.filter_map(Command::from)
-}
-
 fn part_one(input: &str) -> u32 {
-	let (x, y) = read_input(input)
+	let (x, y) = input.lines()
+		.map(Command::from)
 		.fold((0, 0), |(mut x, mut y), command| {
 			match command {
 				Command::Forward(value) => x += value,
@@ -76,7 +71,8 @@ fn part_one(input: &str) -> u32 {
 }
 
 fn part_two(input: &str) -> u32 {
-	let (_, x, y) = read_input(input)
+	let (_, x, y) = input.lines()
+		.map(Command::from)
 		.fold((0, 0, 0), |(mut aim, mut x, mut y), command| {
 			match command {
 				Command::Forward(value) => {
