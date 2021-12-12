@@ -1,4 +1,3 @@
-use std::cell::Cell;
 use commons::*;
 
 fn main() {
@@ -25,9 +24,9 @@ fn main() {
 	);
 }
 
-type Node<'a> = (Vec<usize>, Cell<i16>, &'a str);
+type Node<'a> = (Vec<usize>, bool, &'a str);
 
-fn read_input(input: &str) -> (Vec<Node>, usize) {
+fn parse_input(input: &str) -> Vec<Node> {
 	let mut nodes: Vec<Node> = vec![];
 
 	macro_rules! find_or_insert {
@@ -35,9 +34,8 @@ fn read_input(input: &str) -> (Vec<Node>, usize) {
 			 nodes.iter()
 				.position(|t| t.2 == $name)
 				.unwrap_or_else(|| {
-					let revisit = $name.as_bytes().iter().any(u8::is_ascii_uppercase);
-					let count = if revisit { -1 } else { 1 };
-					nodes.push((vec![], Cell::new(count), $name));
+					let big = $name.as_bytes().iter().any(u8::is_ascii_uppercase);
+					nodes.push((vec![], big, $name));
 					nodes.len() - 1
 			 	})
 		}};
@@ -53,41 +51,49 @@ fn read_input(input: &str) -> (Vec<Node>, usize) {
 			nodes[target_node].0.push(source_node);
 		});
 
+	nodes
+}
+
+fn dfs(nodes: &[Node], revisit: bool) -> usize {
+	assert!(nodes.len() < 32, "Pick a bigger bitset...");
 	let start_node = nodes.iter()
 		.position(|t| t.2 == "start")
 		.unwrap();
+	let end_node = nodes.iter()
+		.position(|t| t.2 == "end")
+		.unwrap();
 
-	(nodes, start_node)
-}
+	let mut count = 0;
+	let mut stack = vec![];
+	stack.push((start_node, 1 << start_node, false));
 
-fn dfs(nodes: &[Node], id: usize, revisits: usize) -> usize {
-	let (edges, visits, name) = &nodes[id];
-
-	match (*name, visits.get(), revisits) {
-		("start" | "end", 0, _) | (_, 0, 0) => 0,
-		(_, n, mut revisits) => {
-			match n {
-				0 => revisits -= 1,
-				_ => visits.set(n - 1),
+	while let Some((id, mask, double)) = stack.pop() {
+		let (edges, _, _) = &nodes[id];
+		for edge in edges {
+			let edge = *edge;
+			if edge == start_node {
+				continue;
 			}
-			let paths = edges.iter()
-				.map(|id| dfs(nodes, *id, revisits))
-				.sum::<usize>();
-			if n != 0 {
-				visits.set(n);
+			if edge == end_node {
+				count += 1;
+				continue;
 			}
-
-			paths + if *name == "end" { 1 } else { 0 }
+			let (_, big, _) = nodes[edge];
+			if big || (1 << edge) & mask == 0 {
+				stack.push((edge, mask | (1 << edge), double));
+			} else if revisit && !double {
+				stack.push((edge, mask | (1 << edge), true));
+			}
 		}
 	}
+
+	count
 }
 
 fn part_one(input: &str) -> usize {
-	let (nodes, start_node) = read_input(input);
-	dfs(&nodes, start_node, 0)
+	dfs(&parse_input(input), false)
 }
 
 fn part_two(input: &str) -> usize {
-	let (nodes, start_node) = read_input(input);
-	dfs(&nodes, start_node, 1)
+	dfs(&parse_input(input), true)
 }
