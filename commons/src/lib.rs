@@ -1,5 +1,6 @@
 #![feature(test)]
 #![feature(type_name_of_val)]
+#![feature(generic_const_exprs)]
 
 pub mod export {
 	pub mod itertools {
@@ -136,11 +137,96 @@ where
 }
 
 pub mod grid {
+	use std::fmt::Display;
+	use itertools::Itertools;
+
+	pub struct Grid<T, const W: usize, const H: usize> where [T; W * H]: Sized {
+		pub width: usize,
+		pub height: usize,
+		pub values: [T; W * H],
+	}
+
+	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized, T: Display {
+		pub fn display(&self) -> String {
+			let mut last_y = 0;
+
+			let mut out = String::new();
+
+			for (y, x) in self.iter_pos_tuples() {
+				if last_y != y {
+					out.push('\n');
+					last_y = y;
+				}
+				out.push_str(&format!("{} |", self.get(x, y)));
+			}
+
+			out
+		}
+
+		pub fn print(&self) {
+			println!("{}", self.display())
+		}
+	}
+
+	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
+		pub fn from_values(width: usize, height: usize, values: [T; W * H]) -> Self {
+			Grid {
+				width,
+				height,
+				values,
+			}
+		}
+
+		pub fn as_values(&self) -> &[T; W * H] {
+			&self.values
+		}
+
+		pub fn as_values_mut(&mut self) -> &mut [T; W * H] {
+			&mut self.values
+		}
+
+		pub fn get_raw(&self, i: usize) -> &T {
+			&self.values[i]
+		}
+
+		pub fn get_raw_mut(&mut self, i: usize) -> &mut T {
+			&mut self.values[i]
+		}
+
+		pub fn get(&self, x: usize, y: usize) -> &T {
+			&self.values[x + y * self.width]
+		}
+
+		pub fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
+			&mut self.values[x + y * self.width]
+		}
+
+		pub fn iter_pos(&self) -> impl Iterator<Item = usize> {
+			0..(self.width * self.height)
+		}
+
+		pub fn iter_pos_tuples(&self) -> impl Iterator<Item = (usize, usize)> {
+			let x = 0..self.width;
+			let y = 0..self.height;
+			x.cartesian_product(y)
+		}
+	}
+
+	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized + Default {
+		pub fn new(width: usize, height: usize) -> Self {
+			Grid {
+				width,
+				height,
+				values: Default::default(),
+			}
+		}
+	}
+
 	pub fn parse_grid<'a, G, F, H, CF, CI, RF, RI>(
-		column_splitter: CF,
-		row_splitter: RF,
 		input: &'a str,
-		grid: F,
+		row_splitter: RF,
+		column_splitter: CF,
+		mut init: F,
 		mut func: H
 	) -> G
 	where
@@ -148,7 +234,7 @@ pub mod grid {
 		RF: Fn(&'a str) -> RI,
 		CI: Iterator<Item = &'a str>,
 		RI: Iterator<Item = &'a str>,
-		F: Fn(usize, usize) -> G,
+		F: FnMut(usize, usize) -> G,
 		H: FnMut(&mut G, usize, usize, &'a str)
 	{
 
@@ -165,7 +251,7 @@ pub mod grid {
 		// `enumerate` starts at 0, so we need to bump it up by one.
 		height += 1;
 
-		let mut grid = grid(width, height);
+		let mut grid = init(width, height);
 
 		row_splitter(input)
 			.filter(|line| !line.is_empty())

@@ -30,9 +30,9 @@ struct Grid {
 impl Grid {
 	fn new(board: &str) -> Self {
 		grid::parse_grid(
-			str::split_ascii_whitespace,
-			str::lines,
 			board,
+			str::lines,
+			str::split_ascii_whitespace,
 			|width, height| Grid {
 				width,
 				height,

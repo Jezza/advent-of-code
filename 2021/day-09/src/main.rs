@@ -27,9 +27,9 @@ struct Grid {
 
 fn parse_input(input: &str) -> Grid {
 	grid::parse_grid(
-		|line| line.split(""),
-		str::lines,
 		input,
+		str::lines,
+		|line| line.split(""),
 		|width, height| Grid {
 			width,
 			height,
@@ -137,8 +137,7 @@ fn part_two(input: &str) -> u64 {
 		sizes.push(seen.len());
 	}
 
-	sizes.sort_unstable();
-	sizes.reverse();
-
-	(sizes[0] * sizes[1] * sizes[2]) as u64
+	let index = sizes.len() - 4;
+	let slice = sizes.select_nth_unstable(index).2;
+	(slice[0] * slice[1] * slice[2]) as u64
 }

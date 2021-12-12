@@ -121,6 +121,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "aoc-2021-11"
+version = "0.1.0"
+dependencies = [
+ "commons",
+]
+
+[[package]]
 name = "aoc01-2019"
 version = "0.1.0"
 dependencies = [

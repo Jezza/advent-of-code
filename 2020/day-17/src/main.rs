@@ -1,5 +1,3 @@
-#![feature(const_generics)]
-
 use std::collections::{HashMap, HashSet};
 
 use commons::{measure, time};
