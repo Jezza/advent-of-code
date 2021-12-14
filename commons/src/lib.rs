@@ -3,6 +3,7 @@
 #![feature(generic_const_exprs)]
 
 pub mod export {
+	#[cfg(feature = "itertools")]
 	pub mod itertools {
 		pub use itertools::*;
 	}
@@ -138,7 +139,6 @@ where
 
 pub mod grid {
 	use std::fmt::Display;
-	use itertools::Itertools;
 
 	pub struct Grid<T, const W: usize, const H: usize> where [T; W * H]: Sized {
 		pub width: usize,
@@ -206,9 +206,15 @@ pub mod grid {
 		}
 
 		pub fn iter_pos_tuples(&self) -> impl Iterator<Item = (usize, usize)> {
-			let x = 0..self.width;
-			let y = 0..self.height;
-			x.cartesian_product(y)
+			let width = self.width;
+
+			self.iter_pos()
+				.map(move |i| {
+					let x = i % width;
+					let y = i / width;
+
+					(x, y)
+				})
 		}
 	}
 

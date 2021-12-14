@@ -1,8 +1,8 @@
 [package]
-name = "commons"
+name = "aoc-2021-14"
 version = "0.1.0"
 authors = ["Jezza <jezzadabomb@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-itertools = { version = "0.10", optional = true }
+commons = { path = "../../commons"}
