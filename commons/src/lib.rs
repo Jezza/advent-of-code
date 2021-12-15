@@ -152,7 +152,7 @@ pub mod grid {
 
 			let mut out = String::new();
 
-			for (y, x) in self.iter_pos_tuples() {
+			for (x, y) in self.iter_pos_tuples() {
 				if last_y != y {
 					out.push('\n');
 					last_y = y;
