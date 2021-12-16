@@ -98,21 +98,13 @@ where
 	}
 
 	for item in it {
-		let item: (I, O) = item;
-		let (
-			input,
-			expected,
-		) = item;
+		let (input, expected): (I, O) = item;
 
 		let got = handler(input.clone());
 
 		if got != expected {
 			println!("\t{:>22} != {}", got, expected);
-			if measure {
-				continue;
-			} else {
-				break;
-			}
+			continue;
 		}
 
 		if measure {
