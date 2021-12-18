@@ -9,6 +9,30 @@ pub mod export {
 	}
 }
 
+pub mod ext {
+	pub trait OptionExt<T> {
+		fn if_present<F: FnMut(T)>(self, f: F);
+		fn if_absent<F: FnMut()>(self, f: F);
+	}
+
+	impl<T> OptionExt<T> for Option<T> {
+		fn if_present<F: FnMut(T)>(self, mut f: F) {
+			match self {
+				Some(v) => f(v),
+				None => (),
+			}
+		}
+
+		fn if_absent<F: FnMut()>(self, mut f: F) {
+			match self {
+				Some(_) => (),
+				None => f(),
+			}
+		}
+
+	}
+}
+
 pub mod test_export {
 	extern crate test;
 
