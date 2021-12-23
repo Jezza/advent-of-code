@@ -76,7 +76,7 @@ fn solve(input: &str, steps: usize) -> u64 {
 			default_state = !default_state;
 		}
 
-		println!("{}x{}", bounds.1 - bounds.0, bounds.3 - bounds.2);
+		// println!("{}x{}", bounds.1 - bounds.0, bounds.3 - bounds.2);
 	}
 
 	points.len() as u64

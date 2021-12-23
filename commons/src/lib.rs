@@ -2,6 +2,7 @@
 #![feature(type_name_of_val)]
 #![feature(generic_const_exprs)]
 #![feature(step_trait)]
+#![feature(iter_intersperse)]
 
 pub mod export {
 	#[cfg(feature = "itertools")]
@@ -72,6 +73,31 @@ pub mod test_export {
 // }
 
 #[macro_export]
+macro_rules! split {
+    ($ident:ident, $first:expr) => {{
+		$ident.split_once($first).unwrap()
+	}};
+	($ident:ident, $first:expr, $second:expr) => {{
+		let (left_0, right) = $ident.split_once($first).unwrap();
+		let (left_1, right) = right.split_once($second).unwrap();
+		(left_0, left_1, right)
+	}};
+	($ident:ident, $first:expr, $second:expr, $third:expr) => {{
+		let (left_0, right) = $ident.split_once($first).unwrap();
+		let (left_1, right) = right.split_once($second).unwrap();
+		let (left_2, right) = right.split_once($third).unwrap();
+		(left_0, left_1, left_2, right)
+	}};
+	($ident:ident, $first:expr, $second:expr, $third:expr, $fourth:expr) => {{
+		let (left_0, right) = $ident.split_once($first).unwrap();
+		let (left_1, right) = right.split_once($second).unwrap();
+		let (left_2, right) = right.split_once($third).unwrap();
+		let (left_3, right) = right.split_once($fourth).unwrap();
+		(left_0, left_1, left_2, left_3, right)
+	}};
+}
+
+#[macro_export]
 macro_rules! parse {
     ($input:expr, $ty:ty) => {{
 		$input.lines()
@@ -100,6 +126,19 @@ macro_rules! time {
 		println!("{}: {:?}", stringify!($expr), start.elapsed());
     	result
     }};
+}
+
+fn dumb_thousands(number: usize) -> String {
+	let output = format!("{}", number);
+	let data: Vec<_> = output.as_bytes()
+		.rchunks(3)
+		.rev()
+		.intersperse(&[b','])
+		.flatten()
+		.copied()
+		.collect();
+
+	String::from_utf8(data).unwrap()
 }
 
 pub fn aoc<I, O, F, P>(
@@ -135,7 +174,7 @@ where
 		if measure {
 			let func = || handler(input.clone());
 			let (median, deviation) = test_export::measure(&func);
-			println!("\t{:>22}\tbench:\t{:>11} ns/iter (+/- {})", expected, median, deviation);
+			println!("\t{:>22}\tbench:\t{:>11} ns/iter (+/- {})", expected, dumb_thousands(median), dumb_thousands(deviation));
 		} else {
 			println!("\t{:>22}", expected);
 		}
@@ -291,9 +330,6 @@ pub mod grid {
 }
 
 pub mod utils {
-	use std::cmp::{Eq, Ord, Reverse};
-	use std::collections::{binary_heap::BinaryHeap, HashMap};
-	use std::hash::Hash;
 
 	pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
 	where
