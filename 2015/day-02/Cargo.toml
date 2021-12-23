@@ -5,4 +5,4 @@ authors = ["Jezza <jezzadabomb@gmail.com>"]
 edition = "2021"
 
 [dependencies]
-commons = { path = "../../commons"}
+commons = { path = "../../commons", features = ["itertools"] }

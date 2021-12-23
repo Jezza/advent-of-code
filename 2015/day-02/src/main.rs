@@ -1,21 +1,26 @@
-// use std::str::pattern::Pattern;
 use commons::*;
 use commons::export::itertools::Itertools;
 
-const INPUT: &str = {
-	"2x3x4"
-	// include_str!("../input/input.txt")
-};
-
 fn main() {
-	// println!("Part One: {}", measure!(part_one()));
-	// println!("Part One: {}", part_one());
-	// println!("Part Two: {}", measure!(part_two()));
-	println!("Part Two: {}", part_two());
+	const TEST_1: &str = include_str!("../input/test-1.txt");
+	const INPUT: &str = include_str!("../input/input.txt");
+
+	aoc(part_one,
+		vec![
+			(TEST_1, 150),
+			(INPUT, 2070300),
+		],
+	);
+	aoc(part_two,
+		vec![
+			(TEST_1, 900),
+			(INPUT, 2078985210),
+		],
+	);
 }
 
-fn part_one() -> u32 {
-	INPUT.lines()
+fn part_one(input: &str) -> u64 {
+	input.lines()
 		.map(|line| {
 			let areas = line.splitn(3, "x")
 				.filter_map(|value| value.parse::<u32>().ok())
@@ -38,8 +43,8 @@ fn part_one() -> u32 {
 		.sum()
 }
 
-fn part_two() -> u64 {
-	INPUT.lines()
+fn part_two(input: &str) -> u64 {
+	input.lines()
 		.map(|line| {
 			let areas = line.splitn(3, "x")
 				.filter_map(|value| value.parse::<u32>().ok())
@@ -63,7 +68,3 @@ fn part_two() -> u64 {
 		.sum()
 }
 
-
-// fn split<'a, P: Pattern<'a>, const N: usize>(input: &'a str, pattern: P) -> [&'a str; N] {
-// 	input.splitn()
-// }
