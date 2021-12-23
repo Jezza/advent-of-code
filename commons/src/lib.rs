@@ -1,6 +1,7 @@
 #![feature(test)]
 #![feature(type_name_of_val)]
 #![feature(generic_const_exprs)]
+#![feature(step_trait)]
 
 pub mod export {
 	#[cfg(feature = "itertools")]
@@ -128,7 +129,7 @@ where
 
 		if got != expected {
 			println!("\t{:>22} != {}", got, expected);
-			continue;
+			break;
 		}
 
 		if measure {
@@ -287,4 +288,49 @@ pub mod grid {
 
 		grid
 	}
+}
+
+pub mod utils {
+	use std::cmp::{Eq, Ord, Reverse};
+	use std::collections::{binary_heap::BinaryHeap, HashMap};
+	use std::hash::Hash;
+
+	pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
+	where
+		<T as std::str::FromStr>::Err: std::fmt::Debug,
+	{
+		let (left, right) = input.split_once("..").unwrap();
+		(left.parse::<T>().unwrap(), right.parse::<T>().unwrap())
+	}
+
+	#[cfg(all(feature = "num-integer", feature = "itertools"))]
+	pub type Offsets<T, const N: usize> = [[T; N]; 3_usize.pow(N as u32)];
+
+	#[cfg(all(feature = "num-integer", feature = "itertools"))]
+	pub fn gen_offsets<T, const N: usize>() -> Offsets<T, N>
+		where
+			T: Copy + num_integer::Integer + std::iter::Step,
+			[T; N]: Sized,
+			[[T; N]; 3_usize.pow(N as u32)]: Sized,
+	{
+		use crate::export::itertools::Itertools;
+
+		let iter = (0..N).map(|_| (T::zero() - T::one())..=T::one()).multi_cartesian_product();
+
+		let value = [T::zero(); N];
+		let mut output = [value; 3_usize.pow(N as u32)];
+
+		for (i, offset) in iter.enumerate() {
+			output[i] = offset.into_iter()
+				.rev()
+				.enumerate()
+				.fold(output[i], |mut acc, (i, v)| {
+					acc[i] = v;
+					acc
+				});
+		}
+
+		output
+	}
+
 }

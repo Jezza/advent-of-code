@@ -6,3 +6,4 @@ edition = "2021"
 
 [dependencies]
 itertools = { version = "0.10", optional = true }
+num-integer = { version = "0.1", optional = true }
