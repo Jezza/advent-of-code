@@ -1,0 +1,12 @@
+[package]
+name = "aoc-2021-23"
+version = "0.1.0"
+authors = ["Jezza <jezzadabomb@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+commons = { path = "../../commons", features = ["pathfinding"]}
+
+
+indexmap = "1.7"
+ahash = "0.7"

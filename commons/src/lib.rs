@@ -9,6 +9,11 @@ pub mod export {
 	pub mod itertools {
 		pub use itertools::*;
 	}
+
+	#[cfg(feature = "pathfinding")]
+	pub mod pathfinding {
+		pub use pathfinding::*;
+	}
 }
 
 pub mod ext {
@@ -31,7 +36,6 @@ pub mod ext {
 				None => f(),
 			}
 		}
-
 	}
 }
 
@@ -74,26 +78,16 @@ pub mod test_export {
 
 #[macro_export]
 macro_rules! split {
-    ($ident:ident, $first:expr) => {{
-		$ident.split_once($first).unwrap()
-	}};
-	($ident:ident, $first:expr, $second:expr) => {{
-		let (left_0, right) = $ident.split_once($first).unwrap();
-		let (left_1, right) = right.split_once($second).unwrap();
-		(left_0, left_1, right)
-	}};
-	($ident:ident, $first:expr, $second:expr, $third:expr) => {{
-		let (left_0, right) = $ident.split_once($first).unwrap();
-		let (left_1, right) = right.split_once($second).unwrap();
-		let (left_2, right) = right.split_once($third).unwrap();
-		(left_0, left_1, left_2, right)
-	}};
-	($ident:ident, $first:expr, $second:expr, $third:expr, $fourth:expr) => {{
-		let (left_0, right) = $ident.split_once($first).unwrap();
-		let (left_1, right) = right.split_once($second).unwrap();
-		let (left_2, right) = right.split_once($third).unwrap();
-		let (left_3, right) = right.split_once($fourth).unwrap();
-		(left_0, left_1, left_2, left_3, right)
+	($input:expr, $($split:expr),*$(,)?) => {{
+		let mut rest = $input;
+		(
+			$({
+				let (left, right) = rest.split_once($split).unwrap_or((rest, ""));
+				rest = right;
+				left
+			},)*
+			rest,
+		)
 	}};
 }
 
@@ -143,13 +137,13 @@ fn dumb_thousands(number: usize) -> String {
 
 pub fn aoc<I, O, F, P>(
 	handler: F,
-	it: P
+	it: P,
 )
-where
-	I: Clone,
-	F: Fn(I) -> O,
-	P: IntoIterator<Item = (I, O)>,
-	O: PartialEq + std::fmt::Display,
+	where
+		I: Clone,
+		F: Fn(I) -> O,
+		P: IntoIterator<Item = (I, O)>,
+		O: PartialEq + std::fmt::Display,
 {
 	let name = std::any::type_name::<F>();
 	println!("{}", name);
@@ -196,6 +190,7 @@ where
 pub mod grid {
 	use std::fmt::Display;
 
+	#[derive(Eq, PartialEq, Clone, Debug, Hash)]
 	pub struct Grid<T, const W: usize, const H: usize> where [T; W * H]: Sized {
 		pub width: usize,
 		pub height: usize,
@@ -221,6 +216,28 @@ pub mod grid {
 
 		pub fn print(&self) {
 			println!("{}", self.display())
+		}
+	}
+
+	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
+		pub fn display_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) -> String {
+			let mut last_y = 0;
+
+			let mut out = String::new();
+
+			for (x, y) in self.iter_pos_tuples() {
+				if last_y != y {
+					out.push('\n');
+					last_y = y;
+				}
+				out.push_str(&format!("{}", handler(self.get(x, y))));
+			}
+
+			out
+		}
+
+		pub fn print_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) {
+			println!("{}", self.display_with_fmt(handler))
 		}
 	}
 
@@ -272,6 +289,19 @@ pub mod grid {
 					(x, y)
 				})
 		}
+
+		pub fn iter_pos_tuples_rev(&self) -> impl Iterator<Item = (usize, usize)> {
+			let width = self.width;
+
+			(0..(self.width * self.height))
+				.rev()
+				.map(move |i| {
+					let x = i % width;
+					let y = i / width;
+
+					(x, y)
+				})
+		}
 	}
 
 	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized + Default {
@@ -289,18 +319,17 @@ pub mod grid {
 		row_splitter: RF,
 		column_splitter: CF,
 		mut init: F,
-		mut func: H
+		mut func: H,
 	) -> G
-	where
-		CF: Fn(&'a str) -> CI,
-		RF: Fn(&'a str) -> RI,
-		CI: Iterator<Item = &'a str>,
-		RI: Iterator<Item = &'a str>,
-		F: FnMut(usize, usize) -> G,
-		H: FnMut(&mut G, usize, usize, &'a str)
+		where
+			CF: Fn(&'a str) -> CI,
+			RF: Fn(&'a str) -> RI,
+			CI: Iterator<Item = &'a str>,
+			RI: Iterator<Item = &'a str>,
+			F: FnMut(usize, usize) -> G,
+			H: FnMut(&mut G, usize, usize, &'a str)
 	{
-
-		let (mut height, width) = row_splitter(input)
+		let (width, mut height) = row_splitter(input)
 			.filter(|line| !line.is_empty())
 			.map(|line| {
 				column_splitter(line)
@@ -308,8 +337,10 @@ pub mod grid {
 					.count()
 			})
 			.enumerate()
-			.max()
-			.unwrap();
+			.fold((usize::MIN, usize::MIN), |(width, height), (index, value)| {
+				(width.max(value), height.max(index))
+			});
+
 		// `enumerate` starts at 0, so we need to bump it up by one.
 		height += 1;
 
@@ -330,10 +361,9 @@ pub mod grid {
 }
 
 pub mod utils {
-
 	pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
-	where
-		<T as std::str::FromStr>::Err: std::fmt::Debug,
+		where
+			<T as std::str::FromStr>::Err: std::fmt::Debug,
 	{
 		let (left, right) = input.split_once("..").unwrap();
 		(left.parse::<T>().unwrap(), right.parse::<T>().unwrap())
@@ -368,5 +398,4 @@ pub mod utils {
 
 		output
 	}
-
 }
