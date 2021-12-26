@@ -19,34 +19,36 @@ fn step<const X: usize, const Y: usize, const C: u8>(
 	grid: &mut Grid,
 	scratch_space: &mut Vec<Position>,
 ) -> bool {
+	let width = grid.width;
+	let area = grid.width * grid.height;
 
-	let mut changed = false;
-
-	for pos @ (x, y) in grid.iter_pos_tuples() {
-		if *grid.get(x, y) != C {
-			continue;
-		}
-		let new_x = if x + X >= grid.width  { 0 } else { x + X };
-		let new_y = if y + Y >= grid.height { 0 } else { y + Y };
-
-		if *grid.get(new_x, new_y) != b'.' {
+	for i in grid.iter_pos() {
+		if *grid.get_raw(i) != C {
 			continue;
 		}
 
-		changed = true;
+		let new_i = if C == b'>' {
+			let y = i / width;
+			let x = i % width;
+			y * width + ((x + 1) % width)
+		} else {
+			(i + width) % area
+		};
 
-		*grid.get_mut(x, y) = b'#';
-		*grid.get_mut(new_x, new_y) = b'X';
 
-		scratch_space.push(pos);
+		if *grid.get_raw(new_i) != b'.' {
+			continue;
+		}
+
+		*grid.get_raw_mut(new_i) = b'X';
+		scratch_space.push((i, new_i));
 	}
 
-	for (x, y) in scratch_space.drain(..) {
-		*grid.get_mut(x, y) = b'.';
+	let changed = !scratch_space.is_empty();
 
-		let new_x = if x + X >= grid.width  { 0 } else { x + X };
-		let new_y = if y + Y >= grid.height { 0 } else { y + Y };
-		*grid.get_mut(new_x, new_y) = C;
+	for (i, new_i) in scratch_space.drain(..) {
+		*grid.get_raw_mut(i) = b'.';
+		*grid.get_raw_mut(new_i) = C;
 	}
 
 	changed
@@ -64,7 +66,7 @@ fn part_one(input: &str) -> u64 {
 		},
 	);
 
-	let mut scratch_space = vec![];
+	let mut scratch_space = Vec::with_capacity(grid.width * grid.height);
 
 	let mut count = 0;
 	while step::<1, 0, b'>'>(&mut grid, &mut scratch_space) | step::<0, 1, b'v'>(&mut grid, &mut scratch_space) {
