@@ -81,7 +81,7 @@ fn part_two() -> usize {
 	fn find_neighbour(current: &Grid, current_pos: (usize, usize), offset: isize) -> bool {
 		// let (mut prev_x, mut prev_y) = (x, y);
 		let (mut prev_x, mut prev_y) = current_pos;
-		let mut pos = i as isize;
+		let mut pos = offset as isize;
 		loop {
 			pos += offset;
 			if pos < 0 {

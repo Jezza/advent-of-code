@@ -1,7 +1,6 @@
-use logos::{Lexer, Logos};
+use logos::Logos;
 
-use commons::measure;
-use commons::time;
+use commons::*;
 
 fn main() {
 	println!("Part One: {}", measure!(part_one()));

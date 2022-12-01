@@ -1,9 +1,8 @@
 [package]
-name = "aoc02"
+name = "aoc-2022-01"
 version = "0.1.0"
 authors = ["Jezza <jezzadabomb@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
-anyhow = "*"
-regex = "*"
+commons = { path = "../../commons"}

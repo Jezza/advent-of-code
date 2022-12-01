@@ -96,12 +96,12 @@ macro_rules! parse {
     ($input:expr, $ty:ty) => {{
 		$input.lines()
 			.filter_map(|v| v.trim().parse::<$ty>().ok())
-			.collect::<Vec<_>>()
+			.collect::<Vec<$ty>>()
 	}};
 	($input:expr, $ty:ty, $sep:literal) => {{
 		$input.split($sep)
 			.filter_map(|v| v.trim().parse::<$ty>().ok())
-			.collect::<Vec<_>>()
+			.collect::<Vec<$ty>>()
 	}};
 }
 

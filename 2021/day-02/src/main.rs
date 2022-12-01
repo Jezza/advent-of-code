@@ -42,7 +42,7 @@ enum Command {
 }
 
 impl Command {
-	fn from(command: &str) -> Option<Command> {
+	fn try_from(command: &str) -> Option<Command> {
 		let (command, value) = command.split_once(" ")?;
 		let value = value.parse().ok()?;
 		let command = match command {
@@ -57,7 +57,7 @@ impl Command {
 
 fn part_one(input: &str) -> u32 {
 	let (x, y) = input.lines()
-		.map(Command::from)
+		.filter_map(Command::try_from)
 		.fold((0, 0), |(mut x, mut y), command| {
 			match command {
 				Command::Forward(value) => x += value,
@@ -72,7 +72,7 @@ fn part_one(input: &str) -> u32 {
 
 fn part_two(input: &str) -> u32 {
 	let (_, x, y) = input.lines()
-		.map(Command::from)
+		.filter_map(Command::try_from)
 		.fold((0, 0, 0), |(mut aim, mut x, mut y), command| {
 			match command {
 				Command::Forward(value) => {

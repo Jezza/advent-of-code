@@ -40,7 +40,7 @@ fn part_one(input: &str) -> u64 {
 
 			sum + min
 		})
-		.sum()
+		.sum::<u32>() as u64
 }
 
 fn part_two(input: &str) -> u64 {
