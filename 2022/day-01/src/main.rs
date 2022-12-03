@@ -16,6 +16,12 @@ fn main() {
             (INPUT, 204837),
         ],
     );
+    aoc(aoc_2022_01::part_one,
+        vec![
+            (TEST_1, 24000),
+            (INPUT, 68442),
+        ],
+    );
 }
 
 fn sums(input: &str) -> impl Iterator<Item=u64> + '_ {
