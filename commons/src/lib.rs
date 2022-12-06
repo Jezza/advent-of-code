@@ -4,6 +4,8 @@
 #![feature(step_trait)]
 #![feature(iter_intersperse)]
 
+use std::str::FromStr;
+
 pub mod export {
     #[cfg(feature = "itertools")]
     pub mod itertools {
@@ -87,6 +89,43 @@ macro_rules! split {
 				left
 			},)*
 			rest,
+		)
+	}};
+}
+
+pub struct Ignored;
+
+impl FromStr for Ignored {
+    type Err = std::convert::Infallible;
+
+    fn from_str(_: &str) -> Result<Self, Self::Err> {
+        Ok(Ignored)
+    }
+}
+
+#[macro_export]
+macro_rules! split_parse {
+	($input:expr, $($split:expr),*$(,)?) => {{
+		let mut rest = $input;
+		(
+			$({
+				let (left, right) = rest.split_once($split).unwrap_or((rest, ""));
+				rest = right;
+                match std::str::FromStr::from_str(left.trim()) {
+                    Ok(value) => value,
+                    Err(err) => {
+                        panic!("Unable to parse {}: {}", left.trim(), err);
+                    }
+                }
+			},)*
+			{
+                match std::str::FromStr::from_str(rest.trim()) {
+                    Ok(value) => value,
+                    Err(err) => {
+                        panic!("Unable to parse {}: {}", rest.trim(), err);
+                    }
+                }
+            },
 		)
 	}};
 }
