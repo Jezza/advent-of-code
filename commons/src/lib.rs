@@ -5,65 +5,65 @@
 #![feature(iter_intersperse)]
 
 pub mod export {
-	#[cfg(feature = "itertools")]
-	pub mod itertools {
-		pub use itertools::*;
-	}
+    #[cfg(feature = "itertools")]
+    pub mod itertools {
+        pub use itertools::*;
+    }
 
-	#[cfg(feature = "pathfinding")]
-	pub mod pathfinding {
-		pub use pathfinding::*;
-	}
+    #[cfg(feature = "pathfinding")]
+    pub mod pathfinding {
+        pub use pathfinding::*;
+    }
 }
 
 pub mod ext {
-	pub trait OptionExt<T> {
-		fn if_present<F: FnMut(T)>(self, f: F);
-		fn if_absent<F: FnMut()>(self, f: F);
-	}
+    pub trait OptionExt<T> {
+        fn if_present<F: FnMut(T)>(self, f: F);
+        fn if_absent<F: FnMut()>(self, f: F);
+    }
 
-	impl<T> OptionExt<T> for Option<T> {
-		fn if_present<F: FnMut(T)>(self, mut f: F) {
-			match self {
-				Some(v) => f(v),
-				None => (),
-			}
-		}
+    impl<T> OptionExt<T> for Option<T> {
+        fn if_present<F: FnMut(T)>(self, mut f: F) {
+            match self {
+                Some(v) => f(v),
+                None => (),
+            }
+        }
 
-		fn if_absent<F: FnMut()>(self, mut f: F) {
-			match self {
-				Some(_) => (),
-				None => f(),
-			}
-		}
-	}
+        fn if_absent<F: FnMut()>(self, mut f: F) {
+            match self {
+                Some(_) => (),
+                None => f(),
+            }
+        }
+    }
 }
 
 pub mod test_export {
-	extern crate test;
+    extern crate test;
 
-	pub use test::*;
+    pub use test::*;
 
-	pub fn print_measure<T>(name: &'static str, func: impl Fn() -> T) -> T {
-		let (median, deviation) = measure(&func);
-		println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", name, median, deviation);
-		func()
-	}
+    pub fn print_measure<T>(name: &'static str, func: impl Fn() -> T) -> T {
+        let (median, deviation) = measure(&func);
+        println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", name, median, deviation);
+        func()
+    }
 
-	pub fn measure<T>(mut func: impl Fn() -> T) -> (usize, usize) {
-		let stats = test::bench::iter(&mut func);
-		let median = stats.median as usize;
-		let deviation = (stats.max - stats.min) as usize;
-		(median, deviation)
-	}
+    pub fn measure<T>(mut func: impl Fn() -> T) -> (usize, usize) {
+        let stats = test::bench::iter(&mut func);
+        let median = stats.median as usize;
+        let deviation = (stats.max - stats.min) as usize;
+        (median, deviation)
+    }
 
-	// pub fn measure<T>(name: &'static str, mut func: impl Fn() -> T) -> T {
-	// 	let stats = test::bench::iter(&mut func);
-	// 	let median = stats.median as usize;
-	// 	let deviation = (stats.max - stats.min) as usize;
-	// 	println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", name, median, deviation);
-	// 	func()
-	// }
+    // pub fn measure<T>(name: &'static str, mut func: impl Fn() -> T) -> T {
+    // 	let stats = test::bench::iter(&mut func);
+    // 	let median = stats.median as usize;
+    // 	let deviation = (stats.max - stats.min) as usize;
+    // 	println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", name, median, deviation);
+    // 	func()
+    // }
 }
 
 // macro_rules! measure {
@@ -123,279 +123,286 @@ macro_rules! time {
 }
 
 fn dumb_thousands(number: usize) -> String {
-	let output = format!("{}", number);
-	let data: Vec<_> = output.as_bytes()
-		.rchunks(3)
-		.rev()
-		.intersperse(&[b','])
-		.flatten()
-		.copied()
-		.collect();
+    let output = format!("{}", number);
+    let data: Vec<_> = output.as_bytes()
+        .rchunks(3)
+        .rev()
+        .intersperse(&[b','])
+        .flatten()
+        .copied()
+        .collect();
 
-	String::from_utf8(data).unwrap()
+    String::from_utf8(data).unwrap()
 }
 
 pub fn aoc<I, O, F, P>(
-	handler: F,
-	it: P,
+    handler: F,
+    it: P,
 )
-	where
-		I: Clone,
-		F: Fn(I) -> O,
-		P: IntoIterator<Item = (I, O)>,
-		O: PartialEq + std::fmt::Display,
+    where
+        I: Clone,
+        F: Fn(I) -> O,
+        P: IntoIterator<Item=(I, O)>,
+        O: PartialEq + std::fmt::Display,
 {
-	let name = std::any::type_name::<F>();
-	println!("{}", name);
+    let name = std::any::type_name::<F>();
+    println!("{}", name);
 
-	#[allow(unused_assignments, unused_mut)]
-	let mut measure = true;
-	#[cfg(debug_assertions)]
-	{
-		measure = false;
-	}
+    #[allow(unused_assignments, unused_mut)]
+        let mut measure = true;
+    #[cfg(debug_assertions)]
+    {
+        measure = false;
+    }
 
-	for item in it {
-		let (input, expected): (I, O) = item;
+    for item in it {
+        let (input, expected): (I, O) = item;
 
-		let got = handler(input.clone());
+        let got = handler(input.clone());
 
-		if got != expected {
-			println!("\t{:>22} != {}", got, expected);
-			break;
-		}
+        if got != expected {
+            println!("\t{:>22} != {}", got, expected);
+            break;
+        }
 
-		if measure {
-			let func = || handler(input.clone());
-			let (median, deviation) = test_export::measure(&func);
-			println!("\t{:>22}\tbench:\t{:>11} ns/iter (+/- {})", expected, dumb_thousands(median), dumb_thousands(deviation));
-		} else {
-			println!("\t{:>22}", expected);
-		}
+        if measure {
+            let func = || handler(input.clone());
+            let (median, deviation) = test_export::measure(&func);
+            println!("\t{:>22}\tbench:\t{:>11} ns/iter (+/- {})", expected, dumb_thousands(median), dumb_thousands(deviation));
+        } else {
+            println!("\t{:>22}", expected);
+        }
 
-		// let value = if measure {
-		// 	let t = test_export::measure(&func);
-		// } else {
-		// 	func()
-		// };
+        // let value = if measure {
+        // 	let t = test_export::measure(&func);
+        // } else {
+        // 	func()
+        // };
 
-		// println!("\t{}: {}", name, value);
-		// if output != value {
-		// 	println!("\t{} != {}", value, output);
-		// }
-		// assert_eq!(output, value);
-	}
+        // println!("\t{}: {}", name, value);
+        // if output != value {
+        // 	println!("\t{} != {}", value, output);
+        // }
+        // assert_eq!(output, value);
+    }
 }
 
 pub mod grid {
-	use std::fmt::Display;
+    use std::fmt::Display;
 
-	#[derive(Eq, PartialEq, Clone, Debug, Hash)]
-	pub struct Grid<T, const W: usize, const H: usize> where [T; W * H]: Sized {
-		pub width: usize,
-		pub height: usize,
-		pub values: [T; W * H],
-	}
+    #[derive(Eq, PartialEq, Clone, Debug, Hash)]
+    pub struct Grid<T, const W: usize, const H: usize> where [T; W * H]: Sized {
+        pub width: usize,
+        pub height: usize,
+        pub values: [T; W * H],
+    }
 
-	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized, T: Display {
-		pub fn display(&self) -> String {
-			let mut last_y = 0;
+    impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized, T: Display {
+        pub fn display(&self) -> String {
+            let mut last_y = 0;
 
-			let mut out = String::new();
+            let mut out = String::new();
 
-			for (x, y) in self.iter_pos_tuples() {
-				if last_y != y {
-					out.push('\n');
-					last_y = y;
-				}
-				out.push_str(&format!("{} |", self.get(x, y)));
-			}
+            for (x, y) in self.iter_pos_tuples() {
+                if last_y != y {
+                    out.push('\n');
+                    last_y = y;
+                }
+                out.push_str(&format!("{} |", self.get(x, y)));
+            }
 
-			out
-		}
+            out
+        }
 
-		pub fn print(&self) {
-			println!("{}", self.display())
-		}
-	}
+        pub fn print(&self) {
+            println!("{}", self.display())
+        }
+    }
 
-	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
-		pub fn display_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) -> String {
-			let mut last_y = 0;
+    impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
+        pub fn display_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) -> String {
+            let mut last_y = 0;
 
-			let mut out = String::new();
+            let mut out = String::new();
 
-			for (x, y) in self.iter_pos_tuples() {
-				if last_y != y {
-					out.push('\n');
-					last_y = y;
-				}
-				out.push_str(&format!("{}", handler(self.get(x, y))));
-			}
+            for (x, y) in self.iter_pos_tuples() {
+                if last_y != y {
+                    out.push('\n');
+                    last_y = y;
+                }
+                out.push_str(&format!("{}", handler(self.get(x, y))));
+            }
 
-			out
-		}
+            out
+        }
 
-		pub fn print_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) {
-			println!("{}", self.display_with_fmt(handler))
-		}
-	}
+        pub fn print_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) {
+            println!("{}", self.display_with_fmt(handler))
+        }
+    }
 
-	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
-		pub fn from_values(width: usize, height: usize, values: [T; W * H]) -> Self {
-			Grid {
-				width,
-				height,
-				values,
-			}
-		}
+    impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
+        pub fn from_values(width: usize, height: usize, values: [T; W * H]) -> Self {
+            Grid {
+                width,
+                height,
+                values,
+            }
+        }
 
-		pub fn as_values(&self) -> &[T; W * H] {
-			&self.values
-		}
+        pub fn as_values(&self) -> &[T; W * H] {
+            &self.values
+        }
 
-		pub fn as_values_mut(&mut self) -> &mut [T; W * H] {
-			&mut self.values
-		}
+        pub fn as_values_mut(&mut self) -> &mut [T; W * H] {
+            &mut self.values
+        }
 
-		pub fn get_raw(&self, i: usize) -> &T {
-			&self.values[i]
-		}
+        pub fn get_raw(&self, i: usize) -> &T {
+            &self.values[i]
+        }
 
-		pub fn get_raw_mut(&mut self, i: usize) -> &mut T {
-			&mut self.values[i]
-		}
+        pub fn get_raw_mut(&mut self, i: usize) -> &mut T {
+            &mut self.values[i]
+        }
 
-		pub fn get(&self, x: usize, y: usize) -> &T {
-			&self.values[x + y * self.width]
-		}
+        pub fn get(&self, x: usize, y: usize) -> &T {
+            &self.values[x + y * self.width]
+        }
 
-		pub fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
-			&mut self.values[x + y * self.width]
-		}
+        pub fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
+            &mut self.values[x + y * self.width]
+        }
 
-		pub fn iter_pos(&self) -> impl Iterator<Item = usize> {
-			0..(self.width * self.height)
-		}
+        pub fn iter_pos(&self) -> impl Iterator<Item=usize> {
+            0..(self.width * self.height)
+        }
 
-		pub fn iter_pos_tuples(&self) -> impl Iterator<Item = (usize, usize)> {
-			let width = self.width;
+        pub fn iter_pos_tuples(&self) -> impl Iterator<Item=(usize, usize)> {
+            let width = self.width;
 
-			self.iter_pos()
-				.map(move |i| {
-					let x = i % width;
-					let y = i / width;
+            self.iter_pos()
+                .map(move |i| {
+                    let x = i % width;
+                    let y = i / width;
 
-					(x, y)
-				})
-		}
+                    (x, y)
+                })
+        }
 
-		pub fn iter_pos_tuples_rev(&self) -> impl Iterator<Item = (usize, usize)> {
-			let width = self.width;
+        pub fn iter_pos_tuples_rev(&self) -> impl Iterator<Item=(usize, usize)> {
+            let width = self.width;
 
-			(0..(self.width * self.height))
-				.rev()
-				.map(move |i| {
-					let x = i % width;
-					let y = i / width;
+            (0..(self.width * self.height))
+                .rev()
+                .map(move |i| {
+                    let x = i % width;
+                    let y = i / width;
 
-					(x, y)
-				})
-		}
-	}
+                    (x, y)
+                })
+        }
+    }
 
-	impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized + Default {
-		pub fn new(width: usize, height: usize) -> Self {
-			Grid {
-				width,
-				height,
-				values: Default::default(),
-			}
-		}
-	}
+    impl<T, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized + Default {
+        pub fn new(width: usize, height: usize) -> Self {
+            Grid {
+                width,
+                height,
+                values: Default::default(),
+            }
+        }
+    }
 
-	pub fn parse_grid<'a, G, F, H, CF, CI, RF, RI>(
-		input: &'a str,
-		row_splitter: RF,
-		column_splitter: CF,
-		mut init: F,
-		mut func: H,
-	) -> G
-		where
-			CF: Fn(&'a str) -> CI,
-			RF: Fn(&'a str) -> RI,
-			CI: Iterator<Item = &'a str>,
-			RI: Iterator<Item = &'a str>,
-			F: FnMut(usize, usize) -> G,
-			H: FnMut(&mut G, usize, usize, &'a str)
-	{
-		let (width, mut height) = row_splitter(input)
-			.filter(|line| !line.is_empty())
-			.map(|line| {
-				column_splitter(line)
-					.filter(|segment| !segment.is_empty())
-					.count()
-			})
-			.enumerate()
-			.fold((usize::MIN, usize::MIN), |(width, height), (index, value)| {
-				(width.max(value), height.max(index))
-			});
+    pub fn parse_grid<'a, G, F, H, CF, CI, RF, RI>(
+        input: &'a str,
+        row_splitter: RF,
+        column_splitter: CF,
+        mut init: F,
+        mut func: H,
+    ) -> G
+        where
+            CF: Fn(&'a str) -> CI,
+            RF: Fn(&'a str) -> RI,
+            CI: Iterator<Item=&'a str>,
+            RI: Iterator<Item=&'a str>,
+            F: FnMut(usize, usize) -> G,
+            H: FnMut(&mut G, usize, usize, &'a str)
+    {
+        let (width, mut height) = row_splitter(input)
+            .filter(|line| !line.is_empty())
+            .map(|line| {
+                column_splitter(line)
+                    .filter(|segment| !segment.is_empty())
+                    .count()
+            })
+            .enumerate()
+            .fold((usize::MIN, usize::MIN), |(width, height), (index, value)| {
+                (width.max(value), height.max(index))
+            });
 
-		// `enumerate` starts at 0, so we need to bump it up by one.
-		height += 1;
+        // `enumerate` starts at 0, so we need to bump it up by one.
+        height += 1;
 
-		let mut grid = init(width, height);
+        let mut grid = init(width, height);
 
-		row_splitter(input)
-			.filter(|line| !line.is_empty())
-			.enumerate()
-			.for_each(|(y, line)| {
-				column_splitter(line)
-					.filter(|segment| !segment.is_empty())
-					.enumerate()
-					.for_each(|(x, segment)| func(&mut grid, x, y, segment))
-			});
+        row_splitter(input)
+            .filter(|line| !line.is_empty())
+            .enumerate()
+            .for_each(|(y, line)| {
+                column_splitter(line)
+                    .filter(|segment| !segment.is_empty())
+                    .enumerate()
+                    .for_each(|(x, segment)| func(&mut grid, x, y, segment))
+            });
 
-		grid
-	}
+        grid
+    }
 }
 
 pub mod utils {
-	pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
-		where
-			<T as std::str::FromStr>::Err: std::fmt::Debug,
-	{
-		let (left, right) = input.split_once("..").unwrap();
-		(left.parse::<T>().unwrap(), right.parse::<T>().unwrap())
-	}
+    pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
+        where
+            <T as std::str::FromStr>::Err: std::fmt::Debug,
+    {
+        parse_range_with_sep(input, "..")
+    }
 
-	#[cfg(all(feature = "num-integer", feature = "itertools"))]
-	pub type Offsets<T, const N: usize> = [[T; N]; 3_usize.pow(N as u32)];
+    pub fn parse_range_with_sep<T: std::str::FromStr>(input: &str, delimiter: &str) -> (T, T)
+        where
+            <T as std::str::FromStr>::Err: std::fmt::Debug,
+    {
+        let (left, right) = input.split_once(delimiter).unwrap();
+        (left.parse::<T>().unwrap(), right.parse::<T>().unwrap())
+    }
 
-	#[cfg(all(feature = "num-integer", feature = "itertools"))]
-	pub fn gen_offsets<T, const N: usize>() -> Offsets<T, N>
-		where
-			T: Copy + num_integer::Integer + std::iter::Step,
-			[T; N]: Sized,
-			[[T; N]; 3_usize.pow(N as u32)]: Sized,
-	{
-		use crate::export::itertools::Itertools;
+    #[cfg(all(feature = "num-integer", feature = "itertools"))]
+    pub type Offsets<T, const N: usize> = [[T; N]; 3_usize.pow(N as u32)];
 
-		let iter = (0..N).map(|_| (T::zero() - T::one())..=T::one()).multi_cartesian_product();
+    #[cfg(all(feature = "num-integer", feature = "itertools"))]
+    pub fn gen_offsets<T, const N: usize>() -> Offsets<T, N>
+        where
+            T: Copy + num_integer::Integer + std::iter::Step,
+            [T; N]: Sized,
+            [[T; N]; 3_usize.pow(N as u32)]: Sized,
+    {
+        use crate::export::itertools::Itertools;
 
-		let value = [T::zero(); N];
-		let mut output = [value; 3_usize.pow(N as u32)];
+        let iter = (0..N).map(|_| (T::zero() - T::one())..=T::one()).multi_cartesian_product();
 
-		for (i, offset) in iter.enumerate() {
-			output[i] = offset.into_iter()
-				.rev()
-				.enumerate()
-				.fold(output[i], |mut acc, (i, v)| {
-					acc[i] = v;
-					acc
-				});
-		}
+        let value = [T::zero(); N];
+        let mut output = [value; 3_usize.pow(N as u32)];
 
-		output
-	}
+        for (i, offset) in iter.enumerate() {
+            output[i] = offset.into_iter()
+                .rev()
+                .enumerate()
+                .fold(output[i], |mut acc, (i, v)| {
+                    acc[i] = v;
+                    acc
+                });
+        }
+
+        output
+    }
 }

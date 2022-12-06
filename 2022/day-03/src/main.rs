@@ -30,9 +30,7 @@ fn priority(value: u8) -> u64 {
 
 fn as_bits(input: &str) -> u64 {
     input.bytes()
-        .fold(0, |acc, b| {
-            acc | 1 << priority(b)
-        })
+        .fold(0, |acc, b| acc | 1 << priority(b))
 }
 
 fn part_one(input: &str) -> u64 {
