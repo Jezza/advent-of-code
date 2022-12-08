@@ -13,7 +13,8 @@ pub fn part_two(mem: &mut [u8], input: &str) -> u64 {
 
 
 
-    sums(input)
+    // sums(input)
+    0
 }
 
 

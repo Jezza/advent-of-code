@@ -103,28 +103,80 @@ impl FromStr for Ignored {
     }
 }
 
+pub mod parsing {
+    use std::str::FromStr;
+
+    pub trait Parse<'a>: Sized {
+        type Error;
+
+        fn from_str(value: &'a str) -> Result<Self, Self::Error>;
+    }
+
+    macro_rules! from_str {
+        (
+            $(
+                $ty:ty;
+            )+
+        ) => {
+            $(
+                impl<'a> Parse<'a> for $ty {
+                    type Error = <$ty as std::str::FromStr>::Err;
+
+                    fn from_str(value: &'a str) -> Result<Self, Self::Error> {
+                        value.parse()
+                    }
+                }
+            )+
+        };
+    }
+
+    impl<'a> Parse<'a> for &'a str {
+        type Error = std::convert::Infallible;
+
+        fn from_str(value: &'a str) -> Result<Self, Self::Error> {
+            Ok(value)
+        }
+    }
+
+    // @FIXME jezza - 07 Dec 2022: Maybe one day... :(
+    // impl<'a, T> Parse<'a> for T where T: FromStr {
+    //     type Error = T::Err;
+    //
+    //     fn from_str(value: &'a str) -> Result<Self, Self::Error> {
+    //         value.parse()
+    //     }
+    // }
+
+    from_str! {
+        String;
+        super::Ignored;
+        u8;
+        u16;
+        u32;
+        u64;
+        u128;
+        i8;
+        i16;
+        i32;
+        i64;
+        i128;
+        usize;
+        isize;
+    }
+}
+
 #[macro_export]
 macro_rules! split_parse {
 	($input:expr, $($split:expr),*$(,)?) => {{
-		let mut rest = $input;
+		let mut rest = $input.trim();
 		(
 			$({
-				let (left, right) = rest.split_once($split).unwrap_or((rest, ""));
+				let (value, right) = rest.split_once($split).unwrap_or((rest, ""));
 				rest = right;
-                match std::str::FromStr::from_str(left.trim()) {
-                    Ok(value) => value,
-                    Err(err) => {
-                        panic!("Unable to parse {}: {}", left.trim(), err);
-                    }
-                }
+                $crate::parse!(value)
 			},)*
 			{
-                match std::str::FromStr::from_str(rest.trim()) {
-                    Ok(value) => value,
-                    Err(err) => {
-                        panic!("Unable to parse {}: {}", rest.trim(), err);
-                    }
-                }
+                $crate::parse!(rest)
             },
 		)
 	}};
@@ -132,6 +184,30 @@ macro_rules! split_parse {
 
 #[macro_export]
 macro_rules! parse {
+    ($input:expr) => {{
+        let input: &str = $input;
+        let input = input.trim();
+        match $crate::parsing::Parse::from_str(input) {
+            Ok(value) => value,
+            Err(err) => {
+                panic!("Unable to parse '{}': {}", input, err);
+            }
+        }
+	}};
+    ($input:expr, $ty:ty) => {{
+		let input: &str = $input;
+        let input = input.trim();
+        match <$ty as $crate::parsing::Parse>::from_str(input) {
+            Ok(value) => value,
+            Err(err) => {
+                panic!("Unable to parse '{}': {}", input, err);
+            }
+        }
+	}};
+}
+
+#[macro_export]
+macro_rules! split_parse_to_vec {
     ($input:expr, $ty:ty) => {{
 		$input.lines()
 			.filter_map(|v| v.trim().parse::<$ty>().ok())
@@ -400,6 +476,7 @@ pub mod grid {
 }
 
 pub mod utils {
+    #[deprecated]
     pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
         where
             <T as std::str::FromStr>::Err: std::fmt::Debug,
@@ -407,6 +484,7 @@ pub mod utils {
         parse_range_with_sep(input, "..")
     }
 
+    #[deprecated]
     pub fn parse_range_with_sep<T: std::str::FromStr>(input: &str, delimiter: &str) -> (T, T)
         where
             <T as std::str::FromStr>::Err: std::fmt::Debug,

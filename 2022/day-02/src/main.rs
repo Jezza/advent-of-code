@@ -13,7 +13,7 @@ fn main() {
     aoc(part_two,
         vec![
             (TEST_1, 12),
-            (INPUT, 2078985210),
+            (INPUT, 12424),
         ],
     );
 }
