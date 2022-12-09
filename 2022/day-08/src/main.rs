@@ -107,12 +107,10 @@ fn part_one(input: &str) -> u64 {
         check!(SOUTH, |x = x, y = grid.height - 1;| y -= 1; y == 0);
     }
 
-    let value = grid.values
+    grid.values
         .iter()
         .filter(|value| (*value & 0b1111_0000) != 0)
-        .count();
-
-    value as u64
+        .count() as u64
 }
 
 #[derive(Default, Copy, Clone)]
@@ -151,11 +149,10 @@ fn part_two(input: &str) -> u64 {
 
     macro_rules! visible {
         ($x:expr, $y:expr, $bit:expr, $count:expr) => {{
-            let x = $x;
-            let y = $y;
-            let tile = grid.get_mut(x, y);
+            // let x = $x;
+            // let y = $y;
             // println!("\t\t{} trees visible FROM {} ({},{}) => {} ({})", $count, name($bit as u8), x, y, tile.value, tile.scenic_score);
-            tile.scenic_score = tile.scenic_score * $count;
+            grid.get_mut($x, $y).scenic_score *= $count;
 
             // *grid.get_mut(x, y) = value | $bit;
         }};
@@ -188,8 +185,8 @@ fn part_two(input: &str) -> u64 {
                     let tree = grid.get($x, $y).value;
 
                     // println!("\t{}", tree);
-                    let size = stack.iter().rposition(|value| *value >= tree).unwrap_or_default();
-                    let count = stack.len() - size;
+                    let index = stack.iter().rposition(|value| *value >= tree).unwrap_or_default();
+                    let count = stack.len() - index;
                     visible!($x, $y, $bit, count as u32);
 
                     if tree == 9 {
