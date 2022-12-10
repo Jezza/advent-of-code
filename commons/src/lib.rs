@@ -130,6 +130,14 @@ pub mod parsing {
         };
     }
 
+    impl<'a, T: Parse<'a>> Parse<'a> for Option<T> {
+        type Error = T::Error;
+
+        fn from_str(value: &'a str) -> Result<Self, Self::Error> {
+            Ok(T::from_str(value).ok())
+        }
+    }
+
     impl<'a> Parse<'a> for &'a str {
         type Error = std::convert::Infallible;
 
@@ -353,6 +361,12 @@ pub mod grid {
 
         pub fn print_with_fmt<O: Display>(&self, handler: impl Fn(&T) -> O) {
             println!("{}", self.display_with_fmt(handler))
+        }
+    }
+
+    impl<T: Copy, const W: usize, const H: usize> Grid<T, W, H> where [T; W * H]: Sized {
+        pub fn from_value(width: usize, height: usize, value: T) -> Self {
+            Self::from_values(width, height, [value; W * H])
         }
     }
 
