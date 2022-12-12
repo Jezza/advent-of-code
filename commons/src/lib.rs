@@ -103,8 +103,11 @@ impl FromStr for Ignored {
     }
 }
 
-pub mod parsing {
+pub mod parse {
+    use std::collections::VecDeque;
+    use std::marker::PhantomData;
     use std::str::FromStr;
+    use crate::parse;
 
     pub trait Parse<'a>: Sized {
         type Error;
@@ -138,6 +141,33 @@ pub mod parsing {
         }
     }
 
+    pub struct SplitInto<const D: char, C>(pub C);
+
+    impl<'a, const D: char, T: Parse<'a>> Parse<'a> for SplitInto<D, VecDeque<T>> {
+        type Error = T::Error;
+
+        fn from_str(value: &'a str) -> Result<Self, Self::Error> {
+            let values = value.split(|c| c == D)
+                .map(|segment| T::from_str(segment.trim()))
+                .collect::<Result<_, T::Error>>()?;
+            Ok(Self(values))
+        }
+    }
+
+    pub struct Split<const D: char, T>(pub Vec<T>);
+
+    impl<'a, const D: char, T: Parse<'a>> Parse<'a> for Split<D, T> {
+        type Error = T::Error;
+
+        fn from_str(value: &'a str) -> Result<Self, Self::Error> {
+            let values = value.split(|c| c == D)
+                .map(|segment| T::from_str(segment.trim()))
+                .collect::<Result<Vec<T>, T::Error>>()?;
+
+            Ok(Self(values))
+        }
+    }
+
     impl<'a> Parse<'a> for &'a str {
         type Error = std::convert::Infallible;
 
@@ -158,6 +188,7 @@ pub mod parsing {
     from_str! {
         String;
         super::Ignored;
+        char;
         u8;
         u16;
         u32;
@@ -191,11 +222,28 @@ macro_rules! split_parse {
 }
 
 #[macro_export]
+macro_rules! rsplit_parse {
+	($input:expr, $($split:expr),*$(,)?) => {{
+		let mut rest = $input.trim();
+		(
+			$({
+				let (left, value) = rest.rsplit_once($split).unwrap_or((rest, ""));
+				rest = left;
+                $crate::parse!(value)
+			},)*
+			{
+                $crate::parse!(rest)
+            },
+		)
+	}};
+}
+
+#[macro_export]
 macro_rules! parse {
     ($input:expr) => {{
         let input: &str = $input;
         let input = input.trim();
-        match $crate::parsing::Parse::from_str(input) {
+        match $crate::parse::Parse::from_str(input) {
             Ok(value) => value,
             Err(err) => {
                 panic!("Unable to parse '{}': {}", input, err);
@@ -205,7 +253,7 @@ macro_rules! parse {
     ($input:expr, $ty:ty) => {{
 		let input: &str = $input;
         let input = input.trim();
-        match <$ty as $crate::parsing::Parse>::from_str(input) {
+        match <$ty as $crate::parse::Parse>::from_str(input) {
             Ok(value) => value,
             Err(err) => {
                 panic!("Unable to parse '{}': {}", input, err);

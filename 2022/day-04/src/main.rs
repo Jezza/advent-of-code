@@ -1,6 +1,6 @@
 use std::str::FromStr;
 use commons::*;
-use commons::parsing::Parse;
+use commons::parse::Parse;
 
 fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
