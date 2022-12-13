@@ -7,15 +7,14 @@
 use std::str::FromStr;
 
 pub mod export {
+    #[cfg(feature = "logos")]
+    pub use logos;
+
     #[cfg(feature = "itertools")]
-    pub mod itertools {
-        pub use itertools::*;
-    }
+    pub use itertools;
 
     #[cfg(feature = "pathfinding")]
-    pub mod pathfinding {
-        pub use pathfinding::*;
-    }
+    pub use pathfinding;
 }
 
 pub mod ext {
@@ -106,7 +105,6 @@ impl FromStr for Ignored {
 pub mod parse {
     use std::collections::VecDeque;
     use std::marker::PhantomData;
-    use std::str::FromStr;
     use crate::parse;
 
     pub trait Parse<'a>: Sized {
@@ -444,7 +442,7 @@ pub mod grid {
         }
 
         pub fn inbounds(&self, x: usize, y: usize) -> bool {
-            x >= 0 && x < self.width && y >= 0 && y < self.height
+            x < self.width && y < self.height
         }
 
         pub fn try_get(&self, x: usize, y: usize) -> Option<&T> {

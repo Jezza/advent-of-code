@@ -124,7 +124,7 @@ fn part_one(input: &str) -> u64 {
 
     handle_input::<20>(&mut monkeys, |item| item / 3);
 
-    monkeys.sort_unstable_by(|left, right| right.inspections.cmp(&left.inspections));
+    monkeys.sort_unstable_by_key(|monkey| u64::MAX - monkey.inspections);
 
     (monkeys[0].inspections * monkeys[1].inspections) as _
 }
@@ -138,7 +138,7 @@ fn part_two(input: &str) -> u64 {
 
     handle_input::<10_000>(&mut monkeys, |item| item % lcd);
 
-    monkeys.sort_unstable_by(|left, right| right.inspections.cmp(&left.inspections));
+    monkeys.sort_unstable_by_key(|monkey| u64::MAX - monkey.inspections);
 
     (monkeys[0].inspections * monkeys[1].inspections) as _
 }

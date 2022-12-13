@@ -1,0 +1,9 @@
+[package]
+name = "aoc-2022-13"
+version = "0.1.0"
+authors = ["Jezza <jezzadabomb@gmail.com>"]
+edition = "2021"
+
+[dependencies]
+logos = "0.12.1"
+commons = { path = "../../commons" }
