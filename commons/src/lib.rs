@@ -443,12 +443,25 @@ pub mod grid {
             &mut self.values[i]
         }
 
+        pub fn inbounds(&self, x: usize, y: usize) -> bool {
+            x >= 0 && x < self.width && y >= 0 && y < self.height
+        }
+
+        pub fn try_get(&self, x: usize, y: usize) -> Option<&T> {
+            if self.inbounds(x, y) {
+                Some(&self.values[x + y * self.width])
+            } else {
+                None
+            }
+        }
+
         pub fn get(&self, x: usize, y: usize) -> &T {
             &self.values[x + y * self.width]
         }
 
         pub fn get_mut(&mut self, x: usize, y: usize) -> &mut T {
-            &mut self.values[x + y * self.width]
+            self.values.get_mut(x + y * self.width)
+                .expect(&format!("Out of bounds: ({}, {})", x, y))
         }
 
         pub fn iter_pos(&self) -> impl Iterator<Item=usize> {
