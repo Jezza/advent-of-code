@@ -425,6 +425,13 @@ pub mod grid {
             }
         }
 
+        pub fn as_pos(&self, raw: usize) -> (usize, usize) {
+            let x = raw % self.width;
+            let y = raw / self.width;
+
+            (x, y)
+        }
+
         pub fn as_values(&self) -> &[T; W * H] {
             &self.values
         }

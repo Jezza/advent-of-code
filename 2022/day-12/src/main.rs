@@ -24,7 +24,7 @@ fn main() {
     );
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 enum Tile {
     Start,
     End,
@@ -54,7 +54,7 @@ const OFFSETS: &[(i8, i8); 4] = &[
 type Grid<T = Tile> = grid::Grid<T, 100, 100>;
 type Point = (usize, usize);
 
-fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Vec<Point>)) -> u64 {
+fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Tile)) -> u64 {
     let mut grid = grid::parse_grid(
         input,
         str::lines,
@@ -76,11 +76,13 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Vec<Point>)) -> u6
     struct Node {
         point: Point,
         distance: u64,
+        value: Tile,
     }
 
     let start = Node {
         point: start,
         distance: 0,
+        value: Tile::End,
     };
 
     let mut grid = &mut grid;
@@ -117,13 +119,14 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Vec<Point>)) -> u6
                     let node = Node {
                         point: (x, y),
                         distance: point.distance + 1,
+                        value,
                     };
 
                     Some((node, node.distance))
                 })
                 .collect::<Vec<_>>()
         },
-        |point| end.contains(&point.point),
+        |node| end == node.value,
     );
 
     let (path, _) = path.unwrap();
@@ -132,40 +135,23 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Vec<Point>)) -> u6
 
 fn part_one(input: &str) -> u64 {
     handle_input(input, |grid| {
-        let start = grid.iter_pos_tuples()
-            .find(|&(x, y)| {
-                matches!(grid.get(x, y), Tile::End)
-            })
+        let start = grid.values.iter()
+            .position(|item| matches!(item, Tile::End))
+            .map(|index| grid.as_pos(index))
             .unwrap();
 
-        let goal = grid.iter_pos_tuples()
-            .find(|&(x, y)| matches!(grid.get(x, y), Tile::Start))
-            .unwrap();
-
-        (start, vec![goal])
+        (start, Tile::Start)
     })
 }
 
 
 fn part_two(input: &str) -> u64 {
     handle_input(input, |grid| {
-        let start = grid.iter_pos_tuples()
-            .find(|&(x, y)| {
-                matches!(grid.get(x, y), Tile::End)
-            })
+        let start = grid.values.iter()
+            .position(|item| matches!(item, Tile::End))
+            .map(|index| grid.as_pos(index))
             .unwrap();
 
-
-        let goals = grid.iter_pos_tuples()
-            .filter_map(|point @ (x, y)| {
-                if matches!(grid.get(x, y), Tile::Value(value) if *value == b'a') {
-                    Some(point)
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        (start, goals)
+        (start, Tile::Value(b'a'))
     })
 }

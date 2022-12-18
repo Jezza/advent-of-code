@@ -121,7 +121,6 @@ fn part_two(input: &str) -> u64 {
         compare(left.iter().copied(), right.iter().copied())
     });
 
-
     let two = items.iter().position(|(item, _)| *item == 2).unwrap();
     let six = items.iter().skip(two).position(|(item, _)| *item == 6).unwrap() + two;
 
