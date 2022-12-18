@@ -555,6 +555,20 @@ pub mod grid {
     }
 }
 
+
+pub fn min_max_range<T: PartialOrd>(left: T, right: T) -> std::ops::RangeInclusive<T> {
+    let (min, max) = min_max(left, right);
+    min..=max
+}
+
+pub fn min_max<T: PartialOrd>(left: T, right: T) -> (T, T) {
+    if left < right {
+        (left, right)
+    } else {
+        (right, left)
+    }
+}
+
 pub mod utils {
     #[deprecated]
     pub fn parse_range<T: std::str::FromStr>(input: &str) -> (T, T)
