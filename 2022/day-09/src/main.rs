@@ -1,30 +1,20 @@
 #![feature(array_windows)]
 #![feature(split_array)]
 
-use std::collections::HashSet;
 use commons::*;
+use std::collections::HashSet;
 
 fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
-        vec![
-            (TEST_1, 13),
-            (INPUT, 6175),
-        ],
-    );
-    aoc(part_two,
-        vec![
-            (TEST_1, 1),
-            (INPUT, 2578),
-        ],
-    );
+    aoc(part_one, vec![(TEST_1, 13), (INPUT, 6175)]);
+    aoc(part_two, vec![(TEST_1, 1), (INPUT, 2578)]);
 }
 
 pub fn for_each_window_mut<const N: usize, T, F>(slice: &mut [T], mut function: F)
-    where
-        F: FnMut(&mut [T; N])
+where
+    F: FnMut(&mut [T; N]),
 {
     for start in 0..=(slice.len().saturating_sub(N)) {
         let slice = &mut slice[start..];
@@ -68,7 +58,8 @@ fn handle_input<const N: usize>(input: &str) -> u64 {
 
     // print_snek(&snek);
 
-    input.lines()
+    input
+        .lines()
         .flat_map(|line| {
             let (direction, count): (&str, i32) = split_parse!(line, " ");
             let offset = match direction {
@@ -78,8 +69,7 @@ fn handle_input<const N: usize>(input: &str) -> u64 {
                 "R" => (1, 0),
                 _ => unreachable!("Unknown movement: {}", direction),
             };
-            std::iter::repeat(offset)
-                .take(count as usize)
+            std::iter::repeat(offset).take(count as usize)
         })
         .map(|(dx, dy)| {
             snek[0].0 += dx;
@@ -104,9 +94,7 @@ fn handle_input<const N: usize>(input: &str) -> u64 {
             // println!("==============================");
             // print_snek(&snek);
 
-            snek.last()
-                .copied()
-                .unwrap()
+            snek.last().copied().unwrap()
         })
         .collect::<HashSet<_>>()
         .len() as u64

@@ -1,27 +1,14 @@
 #![feature(array_windows)]
-#![feature(array_zip)]
+// #![feature(array_zip)]
 
-use std::borrow::BorrowMut;
-use std::cell::RefCell;
-use std::rc::Rc;
 use commons::*;
 
 fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
-        vec![
-            (TEST_1, 31),
-            (INPUT, 350),
-        ],
-    );
-    aoc(part_two,
-        vec![
-            (TEST_1, 29),
-            (INPUT, 349),
-        ],
-    );
+    aoc(part_one, vec![(TEST_1, 31), (INPUT, 350)]);
+    aoc(part_two, vec![(TEST_1, 29), (INPUT, 349)]);
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
@@ -44,12 +31,7 @@ impl Tile {
     }
 }
 
-const OFFSETS: &[(i8, i8); 4] = &[
-    (-1, 0),
-    (1, 0),
-    (0, -1),
-    (0, 1),
-];
+const OFFSETS: &[(i8, i8); 4] = &[(-1, 0), (1, 0), (0, -1), (0, 1)];
 
 type Grid<T = Tile> = grid::Grid<T, 100, 100>;
 type Point = (usize, usize);
@@ -60,7 +42,7 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Tile)) -> u64 {
         str::lines,
         |line| line.split(""),
         |width, height| Grid::from_value(width, height, Tile::Start),
-        |grid, x, y, segment, | {
+        |grid, x, y, segment| {
             *grid.get_mut(x, y) = match segment.as_bytes()[0] {
                 b'S' => Tile::Start,
                 b'E' => Tile::End,
@@ -85,7 +67,7 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Tile)) -> u64 {
         value: Tile::End,
     };
 
-    let mut grid = &mut grid;
+    let grid = &mut grid;
 
     let path = export::pathfinding::directed::dijkstra::dijkstra(
         &start,
@@ -95,7 +77,8 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Tile)) -> u64 {
 
             *grid.get_mut(x, y) = Tile::Tombstone;
 
-            OFFSETS.into_iter()
+            OFFSETS
+                .into_iter()
                 .filter_map(|&(dx, dy)| {
                     let Some(x) = x.checked_add_signed(dx as _) else {
                         return None;
@@ -135,7 +118,9 @@ fn handle_input(input: &str, goals: impl Fn(&Grid) -> (Point, Tile)) -> u64 {
 
 fn part_one(input: &str) -> u64 {
     handle_input(input, |grid| {
-        let start = grid.values.iter()
+        let start = grid
+            .values
+            .iter()
             .position(|item| matches!(item, Tile::End))
             .map(|index| grid.as_pos(index))
             .unwrap();
@@ -144,10 +129,11 @@ fn part_one(input: &str) -> u64 {
     })
 }
 
-
 fn part_two(input: &str) -> u64 {
     handle_input(input, |grid| {
-        let start = grid.values.iter()
+        let start = grid
+            .values
+            .iter()
             .position(|item| matches!(item, Tile::End))
             .map(|index| grid.as_pos(index))
             .unwrap();

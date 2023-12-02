@@ -1,22 +1,12 @@
-use std::cmp::Ordering;
 use commons::*;
+use std::cmp::Ordering;
 
 fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
-        vec![
-            (TEST_1, 13),
-            (INPUT, 5529),
-        ],
-    );
-    aoc(part_two,
-        vec![
-            (TEST_1, 140),
-            (INPUT, 27690),
-        ],
-    );
+    aoc(part_one, vec![(TEST_1, 13), (INPUT, 5529)]);
+    aoc(part_two, vec![(TEST_1, 140), (INPUT, 27690)]);
 }
 
 type Value = u8;
@@ -35,11 +25,14 @@ enum Token {
     Error,
 }
 
-fn tokens(input: &str) -> impl Iterator<Item=Token> + '_ {
+fn tokens(input: &str) -> impl Iterator<Item = Token> + '_ {
     <Token as logos::Logos>::lexer(input)
 }
 
-fn compare(left: impl IntoIterator<Item=Token>, right: impl IntoIterator<Item=Token>) -> Ordering {
+fn compare(
+    left: impl IntoIterator<Item = Token>,
+    right: impl IntoIterator<Item = Token>,
+) -> Ordering {
     let mut left = left.into_iter();
     let mut right = right.into_iter();
 
@@ -65,14 +58,12 @@ fn compare(left: impl IntoIterator<Item=Token>, right: impl IntoIterator<Item=To
                 left_extra.push(Token::ArrayEnd);
                 left_extra.push(token);
             }
-            (Token::Value(left), Token::Value(right)) => {
-                match left.cmp(&right) {
-                    Ordering::Equal => (),
-                    ordering => {
-                        return ordering;
-                    }
+            (Token::Value(left), Token::Value(right)) => match left.cmp(&right) {
+                Ordering::Equal => (),
+                ordering => {
+                    return ordering;
                 }
-            }
+            },
             (Token::ArrayEnd, _) => {
                 return Ordering::Less;
             }
@@ -87,7 +78,8 @@ fn compare(left: impl IntoIterator<Item=Token>, right: impl IntoIterator<Item=To
 }
 
 fn part_one(input: &str) -> u64 {
-    input.split("\n\n")
+    input
+        .split("\n\n")
         .enumerate()
         .filter_map(|(i, line)| {
             let (left, right) = line.split_once("\n").unwrap();
@@ -104,7 +96,8 @@ fn part_one(input: &str) -> u64 {
 }
 
 fn part_two(input: &str) -> u64 {
-    let mut items = input.lines()
+    let mut items = input
+        .lines()
         .filter(|line| !line.is_empty())
         .map(|line| {
             let tokens = tokens(line).collect::<Vec<_>>();
@@ -122,7 +115,12 @@ fn part_two(input: &str) -> u64 {
     });
 
     let two = items.iter().position(|(item, _)| *item == 2).unwrap();
-    let six = items.iter().skip(two).position(|(item, _)| *item == 6).unwrap() + two;
+    let six = items
+        .iter()
+        .skip(two)
+        .position(|(item, _)| *item == 6)
+        .unwrap()
+        + two;
 
     ((two + 1) * (six + 1)) as u64
 }

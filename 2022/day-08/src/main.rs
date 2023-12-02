@@ -4,18 +4,8 @@ fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
-        vec![
-            (TEST_1, 21),
-            (INPUT, 1672),
-        ],
-    );
-    aoc(part_two,
-        vec![
-            (TEST_1, 8),
-            (INPUT, 327180),
-        ],
-    );
+    aoc(part_one, vec![(TEST_1, 21), (INPUT, 1672)]);
+    aoc(part_two, vec![(TEST_1, 8), (INPUT, 327180)]);
 }
 
 const MASK: u8 = 0b0000_1111;
@@ -69,14 +59,13 @@ fn part_one(input: &str) -> u64 {
                 #[allow(unused_mut)]
                 let mut $x = $x_init;
                 // println!("Checking {}... ({}, {})", name($bit), $x, $y);
-                let mut edge = *grid.get($x, $y);
+                let edge = *grid.get($x, $y);
                 let mut edge = edge & MASK;
 
                 // println!("\t{} <-> 0", edge);
                 visible!($x, $y, $bit);
 
                 loop {
-
                     if $limit {
                         break;
                     }
@@ -100,7 +89,6 @@ fn part_one(input: &str) -> u64 {
         check!(WEST, |x = 0, y = y;| x += 1; x == grid.width - 1);
         check!(EAST, |x = grid.width - 1, y = y;| x -= 1; x == 0);
     }
-
 
     for x in 0..grid.width {
         check!(NORTH, |x = x, y = 0;| y += 1; y == grid.height - 1);
@@ -168,7 +156,7 @@ fn part_two(input: &str) -> u64 {
                 #[allow(unused_mut)]
                 let mut $x = $x_init;
                 // println!("Checking {}... ({}, {})", name($bit as u8), $x, $y);
-                let mut edge = grid.get($x, $y).value;
+                let edge = grid.get($x, $y).value;
 
                 visible!($x, $y, $bit, 0);
 
@@ -185,7 +173,10 @@ fn part_two(input: &str) -> u64 {
                     let tree = grid.get($x, $y).value;
 
                     // println!("\t{}", tree);
-                    let index = stack.iter().rposition(|value| *value >= tree).unwrap_or_default();
+                    let index = stack
+                        .iter()
+                        .rposition(|value| *value >= tree)
+                        .unwrap_or_default();
                     let count = stack.len() - index;
                     visible!($x, $y, $bit, count as u32);
 
@@ -202,7 +193,6 @@ fn part_two(input: &str) -> u64 {
         check!(WEST, |x = 0, y = y;| x += 1; x == grid.width - 1);
         check!(EAST, |x = grid.width - 1, y = y;| x -= 1; x == 0);
     }
-
 
     for x in 0..grid.width {
         check!(NORTH, |x = x, y = 0;| y += 1; y == grid.height - 1);

@@ -6,18 +6,8 @@ fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
-        vec![
-            (TEST_1, 24),
-            (INPUT, 1001),
-        ],
-    );
-    aoc(part_two,
-        vec![
-            (TEST_1, 93),
-            (INPUT, 27976),
-        ],
-    );
+    aoc(part_one, vec![(TEST_1, 24), (INPUT, 1001)]);
+    aoc(part_two, vec![(TEST_1, 93), (INPUT, 27976)]);
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -34,11 +24,7 @@ type Grid = grid::Grid<Tile, 1000, 1000>;
 type Axis = usize;
 type Point = (Axis, Axis);
 
-const OFFSETS: &[(i8, i8); 3] = &[
-    (0, 1),
-    (-1, 1),
-    (1, 1),
-];
+const OFFSETS: &[(i8, i8); 3] = &[(0, 1), (-1, 1), (1, 1)];
 
 fn handle(input: &str, func: impl Fn(&mut Grid, &mut Axis)) -> u64 {
     let mut grid = Grid::from_value(1000, 1000, Tile::Air);
@@ -46,7 +32,8 @@ fn handle(input: &str, func: impl Fn(&mut Grid, &mut Axis)) -> u64 {
     let mut max_y = Axis::MIN;
 
     for line in input.lines() {
-        let points = line.split(" -> ")
+        let points = line
+            .split(" -> ")
             .map(|point| split_parse!(point, ","))
             .collect::<Vec<Point>>();
 
@@ -72,8 +59,7 @@ fn handle(input: &str, func: impl Fn(&mut Grid, &mut Axis)) -> u64 {
 
     *grid.get_mut(source.0, source.1) = Tile::Source;
 
-    'falling:
-    loop {
+    'falling: loop {
         for (dx, dy) in *OFFSETS {
             let (x, y) = source;
 
@@ -110,7 +96,6 @@ fn handle(input: &str, func: impl Fn(&mut Grid, &mut Axis)) -> u64 {
 
     count as u64
 }
-
 
 fn part_one(input: &str) -> u64 {
     handle(input, |_, _| ())

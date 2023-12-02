@@ -1,7 +1,6 @@
+use anyhow::Context;
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
-use anyhow::Context;
-use structopt::StructOpt;
 
 use parse_display::{Display, FromStr};
 
@@ -30,30 +29,28 @@ struct MemberName {
 }
 
 macro_rules! format_str {
-	($prefix:literal, $value:literal) => {{
-		let value = String::from($value);
-		format_str!($prefix, value, "")
-	}};
-	($prefix:literal, $value:literal, $suffix:literal) => {{
-		let value = String::from($value);
-		format_str!($prefix, value, $suffix)
-	}};
-	($prefix:literal, $value:expr) => {{
-		format_str!($prefix, $value, "")
-	}};
-	($prefix:literal, $value:expr, $suffix:literal) => {{
-		let mut name = toml_edit::Formatted::new($value);
-		let decor = name.decor_mut();
-		decor.set_prefix($prefix);
-		decor.set_suffix($suffix);
-		toml_edit::Value::String(name)
-	}};
+    ($prefix:literal, $value:literal) => {{
+        let value = String::from($value);
+        format_str!($prefix, value, "")
+    }};
+    ($prefix:literal, $value:literal, $suffix:literal) => {{
+        let value = String::from($value);
+        format_str!($prefix, value, $suffix)
+    }};
+    ($prefix:literal, $value:expr) => {{
+        format_str!($prefix, $value, "")
+    }};
+    ($prefix:literal, $value:expr, $suffix:literal) => {{
+        let mut name = toml_edit::Formatted::new($value);
+        let decor = name.decor_mut();
+        decor.set_prefix($prefix);
+        decor.set_suffix($suffix);
+        toml_edit::Value::String(name)
+    }};
 }
 
 fn main() -> anyhow::Result<()> {
-    let Args {
-        cmd,
-    } = clap::Parser::parse();
+    let Args { cmd } = clap::Parser::parse();
 
     match cmd {
         Command::Add(opts) => handle_add(opts),
@@ -61,16 +58,12 @@ fn main() -> anyhow::Result<()> {
 }
 
 fn handle_add(opts: AddOpts) -> anyhow::Result<()> {
-    let AddOpts {
-        year,
-        day,
-    } = opts;
+    let AddOpts { year, day } = opts;
 
     let cwd = std::env::current_dir()?;
 
     let (path, doc) = find_path(&cwd, "Cargo.toml", |path| {
-        let content = std::fs::read_to_string(path)
-            .ok()?;
+        let content = std::fs::read_to_string(path).ok()?;
 
         let doc = content.parse::<toml_edit::Document>().ok()?;
 
@@ -78,12 +71,10 @@ fn handle_add(opts: AddOpts) -> anyhow::Result<()> {
         let _ = workspace.get("members")?;
 
         Some(doc)
-    }).context("Unable to find Cargo.toml")?;
+    })
+    .context("Unable to find Cargo.toml")?;
 
-    let member = MemberName {
-        year,
-        day,
-    };
+    let member = MemberName { year, day };
 
     add_member(member, doc, &path)?;
 
@@ -136,19 +127,12 @@ fn handle_add(opts: AddOpts) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn add_member(
-    member: MemberName,
-    mut doc: toml_edit::Document,
-    path: &Path,
-) -> anyhow::Result<()> {
-
+fn add_member(member: MemberName, mut doc: toml_edit::Document, path: &Path) -> anyhow::Result<()> {
     // let member_name = format!("{:04}/day-{:02}", year, day);
     // let crate_name = format!("aoc-D{:04}-{:02}", day, year);
 
-    let workspace = doc.get_mut("workspace")
-        .expect("Internal error");
-    let members = workspace.get_mut("members")
-        .expect("Internal error");
+    let workspace = doc.get_mut("workspace").expect("Internal error");
+    let members = workspace.get_mut("members").expect("Internal error");
 
     let mut internal = vec![];
     let mut names = vec![];
@@ -254,4 +238,3 @@ fn find_path<T>(
 
     None
 }
-

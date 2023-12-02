@@ -1,26 +1,14 @@
-use std::cell::RefCell;
 use std::collections::VecDeque;
-use std::rc::Rc;
-use commons::*;
+
 use commons::parse::SplitInto;
-use parse::Split;
+use commons::*;
 
 fn main() {
     const TEST_1: &str = include_str!("../input/test-1.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
-        vec![
-            (TEST_1, 10605),
-            (INPUT, 54054),
-        ],
-    );
-    aoc(part_two,
-        vec![
-            (TEST_1, 2713310158),
-            (INPUT, 14314925001),
-        ],
-    );
+    aoc(part_one, vec![(TEST_1, 10605), (INPUT, 54054)]);
+    aoc(part_two, vec![(TEST_1, 2713310158), (INPUT, 14314925001)]);
 }
 
 #[derive(Copy, Clone, Debug)]
@@ -51,7 +39,8 @@ impl<'a> parse::Parse<'a> for Monkey {
         // This is the ordinal.
         let _ = lines.next().unwrap();
 
-        let (_, SplitInto(mut items)): (Ignored, SplitInto<',', VecDeque<Item>>) = split_parse!(lines.next().unwrap(), ": ");
+        let (_, SplitInto(items)): (Ignored, SplitInto<',', VecDeque<Item>>) =
+            split_parse!(lines.next().unwrap(), ": ");
 
         let factor = {
             let line = lines.next().unwrap();
@@ -96,7 +85,6 @@ fn handle_input<const R: usize>(monkeys: &mut [Monkey], chill: impl Fn(Item) -> 
             std::mem::swap(&mut items, &mut monkey.items);
 
             for item in items.drain(..) {
-
                 let item = match factor {
                     StressFactor::Square => item * item,
                     StressFactor::Add(scale) => item + scale,
@@ -118,9 +106,7 @@ fn handle_input<const R: usize>(monkeys: &mut [Monkey], chill: impl Fn(Item) -> 
 }
 
 fn part_one(input: &str) -> u64 {
-    let mut monkeys: Vec<Monkey> = input.split("\n\n")
-        .map(|monkey| parse!(monkey))
-        .collect();
+    let mut monkeys: Vec<Monkey> = input.split("\n\n").map(|monkey| parse!(monkey)).collect();
 
     handle_input::<20>(&mut monkeys, |item| item / 3);
 
@@ -130,9 +116,7 @@ fn part_one(input: &str) -> u64 {
 }
 
 fn part_two(input: &str) -> u64 {
-    let mut monkeys: Vec<Monkey> = input.split("\n\n")
-        .map(|monkey| parse!(monkey))
-        .collect();
+    let mut monkeys: Vec<Monkey> = input.split("\n\n").map(|monkey| parse!(monkey)).collect();
 
     let lcd: Item = monkeys.iter().map(|m| m.divisor).product();
 

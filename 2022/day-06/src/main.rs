@@ -10,7 +10,8 @@ fn main() {
     const TEST_5: &str = include_str!("../input/test-5.txt");
     const INPUT: &str = include_str!("../input/input.txt");
 
-    aoc(part_one,
+    aoc(
+        part_one,
         vec![
             (TEST_1, 7),
             (TEST_2, 5),
@@ -20,7 +21,8 @@ fn main() {
             (INPUT, 1987),
         ],
     );
-    aoc(part_two,
+    aoc(
+        part_two,
         vec![
             (TEST_1, 19),
             (TEST_2, 23),
@@ -33,20 +35,25 @@ fn main() {
 }
 
 fn handle_input<const N: usize>(input: &str) -> u64 {
-    (input.as_bytes().array_windows().position(|window: &[u8; N]| {
-        // @FIXME jezza - 06 Dec 2022: There's a better way to do this.
-        //  We just need to prime the counts, then we only care about new values, and last values.
+    (input
+        .as_bytes()
+        .array_windows()
+        .position(|window: &[u8; N]| {
+            // @FIXME jezza - 06 Dec 2022: There's a better way to do this.
+            //  We just need to prime the counts, then we only care about new values, and last values.
 
-        let mut counts = 0u32;
-        for c in window {
-            let mark = counts;
-            counts |= 1 << (*c - b'a') as usize;
-            if mark == counts {
-                return false;
+            let mut counts = 0u32;
+            for c in window {
+                let mark = counts;
+                counts |= 1 << (*c - b'a') as usize;
+                if mark == counts {
+                    return false;
+                }
             }
-        }
-        true
-    }).unwrap() + N) as u64
+            true
+        })
+        .unwrap()
+        + N) as u64
 }
 
 fn part_one(input: &str) -> u64 {

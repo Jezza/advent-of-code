@@ -6,11 +6,16 @@ use std::collections::HashSet;
 
 macro_rules! measure {
     ($expr:expr) => {{
-    	let stats = test::bench::iter(&mut || $expr);
-		let median = stats.median as usize;
-		let deviation = (stats.max - stats.min) as usize;
-		println!("test {:<36}\tbench:\t{:>11} ns/iter (+/- {})", stringify!($expr), median, deviation);
-		$expr
+        let stats = test::bench::iter(&mut || $expr);
+        let median = stats.median as usize;
+        let deviation = (stats.max - stats.min) as usize;
+        println!(
+            "test {:<36}\tbench:\t{:>11} ns/iter (+/- {})",
+            stringify!($expr),
+            median,
+            deviation
+        );
+        $expr
     }};
 }
 
@@ -27,7 +32,8 @@ fn main() {
 
 fn part_one() -> usize {
     process_input(|group| {
-        group.as_bytes()
+        group
+            .as_bytes()
             .iter()
             .filter(|&c| *c != b'\n')
             .copied()
@@ -38,7 +44,8 @@ fn part_one() -> usize {
 
 fn part_one_bits() -> usize {
     process_input(|group| {
-        group.split_ascii_whitespace()
+        group
+            .split_ascii_whitespace()
             .flat_map(|answer| answer.as_bytes())
             .map(|c| 1u32 << (*c - b'a'))
             .fold(0, |acc, c| acc | c)
@@ -48,7 +55,8 @@ fn part_one_bits() -> usize {
 
 fn part_two() -> usize {
     process_input(|group: &str| {
-        group.split('\n')
+        group
+            .split('\n')
             .map(|answer| answer.as_bytes().iter().copied().collect::<HashSet<u8>>())
             .reduce(|left: HashSet<u8>, right: HashSet<u8>| &left & &right)
             .unwrap()
@@ -58,9 +66,11 @@ fn part_two() -> usize {
 
 fn part_two_bits() -> usize {
     process_input(|group| {
-        group.split_ascii_whitespace()
+        group
+            .split_ascii_whitespace()
             .map(|answer| {
-                answer.as_bytes()
+                answer
+                    .as_bytes()
                     .iter()
                     .map(|c| 1u32 << (*c - b'a'))
                     .fold(0, |acc, c| acc | c)
@@ -76,4 +86,3 @@ fn process_input(handler: impl Fn(&str) -> usize) -> usize {
         .map(handler)
         .sum()
 }
-
