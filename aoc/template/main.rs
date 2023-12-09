@@ -6,14 +6,14 @@ fn main() {
 
 	aoc(part_one,
 		vec![
-			(TEST_1, 150),
-			(INPUT, 2070300),
+			(TEST_1, 0),
+			(INPUT, 0),
 		],
 	);
 	aoc(part_two,
 		vec![
-			(TEST_1, 900),
-			(INPUT, 2078985210),
+			(TEST_1, 0),
+			(INPUT, 0),
 		],
 	);
 }
